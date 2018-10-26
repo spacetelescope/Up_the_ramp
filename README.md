@@ -1,0 +1,1 @@
+Project for up-the-ramp fitting of IR exposures
