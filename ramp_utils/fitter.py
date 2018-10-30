@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import poisson, norm, uniform, gamma, power_divergence, chi2
 from scipy.optimize import minimize
+from scipy.optimize.optimize import _minimize_neldermead
 import emcee, corner, time
 
 class IterativeFitter(object):
@@ -50,7 +51,7 @@ class IterativeFitter(object):
 
 
         '''
-        Freeze the noraml pdfs to compare "true" and measured counts and the poisson pdf to compare the
+        Freeze the normal pdfs to compare "true" and measured counts and the poisson pdf to compare the
         mean and "true" electrons
         '''
 
@@ -83,7 +84,7 @@ class IterativeFitter(object):
                     return np.inf
                 else:
                     poisson_pmf[i]  = self.poisson_distr[i].pmf(xr[i]-xr[i-1])
-            gaussian_pdf[i] = self.normal_distr[i].pdf(x[i])
+            gaussian_pdf[i] = self.normal_distr[i].pdf(xr[i])
  
         keep_grps = np.empty_like(xr,dtype=np.bool_)
         for i in range(len(xr)):
@@ -117,7 +118,22 @@ class IterativeFitter(object):
         while success == False:
             attempts = attempts + 1
             
-            self.minimize_res = minimize(self.loglikelihood_all,self.x_hat,method=self.fitpars['one_iteration_method'])
+            if self.fitpars['one_iteration_method'] == 'Nelder-Mead':
+                sim = np.empty((self.x_hat.size + 1, self.x_hat.size), dtype=self.x_hat.dtype)
+                sim[0] = self.x_hat
+                for k in range(self.x_hat.size):
+                    y = self.x_new + np.random.normal(scale=self.RM.RON_e,size=self.x_hat.size)
+                    for i in range(1,self.x_hat.size):
+                        if y[i] < y[i-1]:
+                            y[i] = y[i-1]
+                    sim[k+1] = y+np.mean(self.RM.noisy_counts*self.RM.gain)-np.mean(y)
+
+            
+                self.minimize_res = _minimize_neldermead(self.loglikelihood_all,self.x_hat,initial_simplex=sim)
+            else:
+                self.minimize_res = minimize(self.loglikelihood_all,self.x_hat,method=self.fitpars['one_iteration_method'])
+            
+            
             success = self.minimize_res['success']
             if success == True:
                 self.x_new = np.round(self.minimize_res['x'])
@@ -171,7 +187,7 @@ class IterativeFitter(object):
             '''
             
             thr = np.sqrt(np.sum(np.square(np.array([self.RM.gain,self.RM.effRON_e])))) /self.RM.RTS.group_times[-1] 
-            
+            #thr = self.RM.gain /self.RM.RTS.group_times[-1]
             
 
 
@@ -290,7 +306,7 @@ class IterativeFitter(object):
         f,ax = plt.subplots(1,1,figsize=(10,5))
         ax.scatter(self.RM.RTS.group_times,self.RM.noisy_counts,label='Noisy Counts',s=100,marker='*')
         ax.scatter(self.RM.RTS.group_times,self.x_new/self.RM.gain,label='Convergence counts',s=25)
-        ax.scatter(self.RM.RTS.group_times,self.RM.noisy_counts-self.RM.RON_effective/self.RM.gain,label='Noiseless Counts + \n Bias + KTC',s=25)
+        ax.scatter(self.RM.RTS.group_times,self.RM.noisy_counts-self.RM.RON_effective/self.RM.gain,label='Noiseless Counts + \n Bias + KTC + CRs',s=25)
         ax.scatter(self.RM.RTS.group_times,self.RM.noisy_counts-(self.RM.RON_effective-np.mean(self.RM.RON_effective))/self.RM.gain,label='Noiseless Counts + \n Bias + KTC +\n mean RON',s=25)
         
         ax.plot(self.RM.RTS.group_times,(self.x_new[0]+self.mean_electron_rate*self.RM.RTS.group_times)/self.RM.gain)

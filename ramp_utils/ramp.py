@@ -258,55 +258,56 @@ class RampMeasurement(object):
         self.effRON_e = np.sqrt(num/den)*self.RON_e
 
 
-        self.generate_noiseless_electrons()
+        self.generate_electrons()
         self.add_noise()
         self.add_CR_hits()
         self.average_groups()
 
-    def generate_noiseless_electrons(self):
+    def generate_electrons(self):
 
         '''
         Given the timing sequence and the flux generate a ramp of number of detected electrons.
-        These electrons are noiseless in the sense that no instrumental noise is added.
-        They are however generated via a random poisson process, thus contain
-        the intrinsic noise due to the source photon statistics. In order to account for the effect of cosmic rays,
-        it is necessary to simulate the accumulated counts read buy read (both skipped and effectively read)
+        These electrons are generated via a random poisson process, thus contain
+        the intrinsic noise due to the source photon statistics. Note that the electrons_read attribute
+        an array of integers 
         '''
         
-        self.noiseless_electrons_reads = np.zeros_like(self.RTS.read_times)
+        self.electrons_reads = np.zeros_like(self.RTS.read_times,dtype=np.int_)
         
-        for i in range(1,self.noiseless_electrons_reads.size,1):
+        for i in range(1,self.electrons_reads.size,1):
             delta_t = self.RTS.read_times[i] - self.RTS.read_times[i-1]
-            self.noiseless_electrons_reads[i] = self.noiseless_electrons_reads[i-1]+np.random.poisson(lam=delta_t*self.flux)
+            self.electrons_reads[i] = self.electrons_reads[i-1]+np.random.poisson(lam=delta_t*self.flux)
 
         '''
-        For convenience create a noiseless_counts attribute that is purely equal to the noiseless electrons
+        For convenience create a noiseless_counts attribute that is purely equal to the electrons
         divided by the gain (no errors, no discretization)
         '''
             
-        self.noiseless_counts_reads = self.noiseless_electrons_reads/self.gain
+        self.noiseless_counts_reads = self.electrons_reads/self.gain
 
     def add_noise(self):
 
         '''
-        Add the various sources of noise to the ideal counts
+        Add the various sources of noise. This step creates an other convenience variable: noisy_electrons_reads,
+        which represent the noisy version of the phot-electrons, and is a float (even though electrons are 
+        integers). The final measured variable, the noisy counts is instead an integer as it should be
         '''
 
         '''
         Add bias as a constant
         '''
-        self.noisy_electrons_reads = self.noiseless_electrons_reads + self.bias_e
+        self.noisy_electrons_reads = self.electrons_reads + self.bias_e
 
         '''
         Add KTC noise as random gaussian (since KTC is added at reset, it is the same value for all reads)
         '''
-        self.KTC_actual = np.rint(np.random.normal(scale=self.KTC_e)).astype(np.int_)
+        self.KTC_actual = np.random.normal(scale=self.KTC_e)
         self.noisy_electrons_reads = self.noisy_electrons_reads + self.KTC_actual
 
         '''
         Add read noise as random gaussian (a different random number per read)
         '''
-        self.RON_actual_reads = np.rint(np.random.normal(scale=self.RON_e,size=self.noisy_electrons_reads.size)).astype(np.int_)
+        self.RON_actual_reads = np.random.normal(scale=self.RON_e,size=self.noisy_electrons_reads.size)
         self.noisy_electrons_reads = self.noisy_electrons_reads + self.RON_actual_reads
 
         '''
@@ -330,29 +331,38 @@ class RampMeasurement(object):
         
         '''
 
+        self.cum_CR_counts_reads = np.zeros_like(self.RTS.read_times,dtype=np.int_)
         if self.CRdict is not None:
             for t,c in zip(self.CRdict['times'],self.CRdict['counts']):
                 '''First find out which of the ramp frames the CR falls in'''
                 msk = self.RTS.read_times >= t
-                self.noisy_counts_reads[msk] = self.noisy_counts_reads[msk]+c
-
+                self.cum_CR_counts_reads[msk] = self.cum_CR_counts_reads[msk]+np.floor(c).astype(np.int_)
+                
+            self.noisy_counts_reads = self.noisy_counts_reads + self.cum_CR_counts_reads
 
     def average_groups(self):
         '''
         Method to take the individual reads and average them
         '''
 
-        self.noisy_counts = np.zeros(self.RTS.ngroups)
+        self.noisy_counts = np.zeros(self.RTS.ngroups,dtype=np.int_)
         self.noiseless_counts = np.zeros(self.RTS.ngroups)
+        self.cum_CR_counts = np.zeros(self.RTS.ngroups)
         self.RON_effective = np.zeros(self.RTS.ngroups)
 
         for i in range(self.RTS.ngroups):
-            counts_to_average = self.noisy_counts_reads[i*(self.RTS.nframes+self.RTS.nskips):i*(self.RTS.nframes+self.RTS.nskips)+self.RTS.nframes]
-            self.noisy_counts[i] = np.floor(np.mean(counts_to_average)).astype(np.int_)
-            counts_to_average = self.noiseless_counts_reads[i*(self.RTS.nframes+self.RTS.nskips):i*(self.RTS.nframes+self.RTS.nskips)+self.RTS.nframes]
-            self.noiseless_counts[i] = np.floor(np.mean(counts_to_average)).astype(np.int_)
-            counts_to_average = self.RON_actual_reads[i*(self.RTS.nframes+self.RTS.nskips):i*(self.RTS.nframes+self.RTS.nskips)+self.RTS.nframes]
-            self.RON_effective[i] = np.floor(np.mean(counts_to_average)).astype(np.int_)
+
+            stuff_to_average = self.noisy_counts_reads[i*(self.RTS.nframes+self.RTS.nskips):i*(self.RTS.nframes+self.RTS.nskips)+self.RTS.nframes]
+            self.noisy_counts[i] = np.floor(np.mean(stuff_to_average)).astype(np.int_)
+
+            stuff_to_average = self.noiseless_counts_reads[i*(self.RTS.nframes+self.RTS.nskips):i*(self.RTS.nframes+self.RTS.nskips)+self.RTS.nframes]
+            self.noiseless_counts[i] = np.mean(stuff_to_average)
+
+            stuff_to_average = self.cum_CR_counts_reads[i*(self.RTS.nframes+self.RTS.nskips):i*(self.RTS.nframes+self.RTS.nskips)+self.RTS.nframes]
+            self.cum_CR_counts[i] = np.mean(stuff_to_average)
+
+            stuff_to_average = self.RON_actual_reads[i*(self.RTS.nframes+self.RTS.nskips):i*(self.RTS.nframes+self.RTS.nskips)+self.RTS.nframes]
+            self.RON_effective[i] = np.mean(stuff_to_average)
         
             
     def test_plot(self):
@@ -368,10 +378,13 @@ class RampMeasurement(object):
             ax[0].scatter(self.RTS.group_times,self.noiseless_counts,label='Noiseless Counts -- gr. avg.',marker='x',s=100)
         ax[0].legend()
 
-        ax[1].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noiseless_counts_reads[self.RTS.kept_reads]+self.bias_adu+self.KTC_actual/self.gain,label='Noiseless Counts + \n Bias + KTC',s=15)
-        ax[1].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noiseless_counts_reads[~self.RTS.kept_reads]+self.bias_adu+self.KTC_actual/self.gain,label=None,s=1)
+        ax[1].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noiseless_counts_reads[self.RTS.kept_reads]+self.cum_CR_counts_reads[self.RTS.kept_reads]+self.bias_adu+self.KTC_actual/self.gain,
+                      label='Noiseless Counts + \n Bias + KTC + CRs',s=15)
+        ax[1].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noiseless_counts_reads[~self.RTS.kept_reads]+self.cum_CR_counts_reads[~self.RTS.kept_reads]+self.bias_adu+self.KTC_actual/self.gain,
+                      label=None,s=1)
         if self.RTS.nframes > 1:
-            ax[1].scatter(self.RTS.group_times,self.noiseless_counts+self.bias_adu+self.KTC_actual/self.gain,label='Noiseless Counts + \n Bias + KTC -- gr. avg.',s=100,marker='x')
+            ax[1].scatter(self.RTS.group_times,self.noiseless_counts+self.cum_CR_counts+self.bias_adu+self.KTC_actual/self.gain,
+                          label='Noiseless Counts + \n Bias + KTC -- gr. avg.',s=100,marker='x')
 
         ax[1].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noisy_counts_reads[self.RTS.kept_reads],label='Noisy Counts',s=15)
         ax[1].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noisy_counts_reads[~self.RTS.kept_reads],label=None,s=1)
@@ -402,25 +415,33 @@ class RampMeasurement(object):
 
 
     def add_background(self,extra_bg):
-	
+
         '''
         Method to add extra background at the single read level.
         It modifies the "noisy_electrons_reads" attribute and then
         adds the CRhits and perfoms the group-average and conversion to counts/s.
-	    
+        
         :extra_bg:
-            a np.array of the same size as RTS.read_times.
+            a np.array of integers of the same size as RTS.read_times.
             It contains the cumulative electrons from the extra background source
         '''
-	    
+        
+        if extra_bg.dtype != np.int_:
+            print('The extra background array must be of np.int type')
+            assert False
+        
         if (extra_bg.size != self.RTS.read_times.size):
             print('The extra background array must be of the same length as the RTS.read_times array')
             assert False
         else:
+            self.electrons_reads = self.electrons_reads + extra_bg
+            self.noiseless_counts_reads = self.electrons_reads/self.gain
             self.noisy_electrons_reads = self.noisy_electrons_reads + extra_bg
             self.noisy_counts_reads = np.floor(self.noisy_electrons_reads/self.gain).astype(np.int_)
-
+            
         self.add_CR_hits()
         self.average_groups()
-		
-		
+        
+        
+        
+        
