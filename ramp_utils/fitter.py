@@ -215,7 +215,7 @@ class IterativeFitter(object):
         # The noise is computed starting from eq(4) of Robberto (2010), JWST-STScI-002161
         
         var_signal_per_diff = self.mean_electron_rate/self.RM.RTS.nframes * (self.dt[1:] + self.triangle_sums[1:]/self.RM.RTS.nframes ) 
-        stddev = np.sqrt(var_signal+self.var_RON_per_diff+self.var_quant_per_diff)
+        stddev = np.sqrt(var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
         deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
         self.good_intervals = np.fabs( deltas/stddev) < CRthr
 
@@ -249,7 +249,7 @@ class IterativeFitter(object):
 
             #test here for CR presence
             var_signal_per_diff = self.mean_electron_rate/self.RM.RTS.nframes * (self.dt[1:] + self.triangle_sums[1:]/self.RM.RTS.nframes ) 
-            stddev = np.sqrt(var_signal+self.var_RON_per_diff+self.var_quant_per_diff)
+            stddev = np.sqrt(var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
             deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
             new_good_intervals = np.fabs(deltas/stddev) < CRthr
 
@@ -310,6 +310,9 @@ class IterativeFitter(object):
 
         elif mode == 'Squared-deviations':
             variance = (f_exp+2*np.square(self.RM.RON_e))/np.square(self.RM.gain)
+            
+            var_signal_per_diff = self.mean_electron_rate/self.RM.RTS.nframes * (self.dt[1:] + self.triangle_sums[1:]/self.RM.RTS.nframes ) 
+            variance = var_signal_per_diff[self.good_intervals]+self.var_RON_per_diff+self.var_quant_per_diff
             g = np.sum(np.square(f_obs-f_exp)/variance)
             p = chi2.sf(g,dof)      
 
