@@ -25,17 +25,26 @@ class IterativeFitter(object):
         else:
             self.fitpars = {'one_iteration_method':'Nelder-Mead'}
 
+
+
+        '''
+        Initialize the dt array (differences between the group times)
+        Also inizialize an array that contains the covariance error term for the count differences within an interval. This is the sum
+        of two lower-traingular matrices sum (derived from the second term in eq(4) of Roberto (2010) JWST-STScI-002161)
+        '''
+        
+        self.dt    = np.zeros_like(self.RM.noisy_counts)
+        self.triangle_sums = np.zeros_like(self.RM.noisy_counts)
+        for i in range(1,self.dt.size):
+            self.dt[i] = self.RM.RTS.group_times[i] - self.RM.RTS.group_times[i-1] 
+            self.triangle_sums[i] = self.RM.RTS.lower_triangle_sum[i] + self.RM.RTS.lower_triangle_sum[i-1]
+            
         '''
         Initialize the "hat" values. These are the latent poisson variables "actual number of electrons deposited in each interval"
         The _new values are the auxiliary variables used to iterate over the _hat ones
         '''
         
         self.x_hat = np.floor(self.RM.noisy_counts*self.RM.gain)
-        self.dt    = np.zeros_like(self.x_hat)
-
-        for i in range(1,self.dt.size):
-            self.dt[i] = self.RM.RTS.group_times[i] - self.RM.RTS.group_times[i-1] 
-
         
         for i in range(1,self.x_hat.size):
             if self.x_hat[i] < self.x_hat[i-1]:
@@ -60,6 +69,15 @@ class IterativeFitter(object):
         for i in range(len(self.RM.noisy_counts)):
             self.normal_distr.append(norm(loc=(self.RM.noisy_counts[i]*self.RM.gain),scale=self.RM.RON_e))
             self.poisson_distr.append(poisson(mu=self.mean_electron_rate*self.dt[i]))
+            
+            
+            
+        '''
+        Initialize a couple of auxiliary variables needed to compute the noise for each count difference
+        '''
+        self.var_RON_per_diff    = 2.*np.square(self.RM.RON_e)/self.RM.RTS.nframes
+        self.var_quant_per_diff  = 2./12.*np.square(self.RM.gain*self.RM.RTS.nframes)
+
 
     def loglikelihood_all(self,x):
         '''
@@ -193,10 +211,13 @@ class IterativeFitter(object):
 
         old_mean_electron_rate = self.mean_electron_rate
             
-        #Initial flagging of CR hits
-        stddev = np.sqrt(self.mean_electron_rate*self.dt[1:]+2*np.square(self.RM.RON_e))
-        diffs  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
-        self.good_intervals = np.fabs( diffs/stddev) < CRthr
+        # Initial flagging of CR hits. Count-differences that deviate more than a certain threshold from the noise are flagged
+        # The noise is computed starting from eq(4) of Robberto (2010), JWST-STScI-002161
+        
+        var_signal_per_diff = self.mean_electron_rate/self.RM.RTS.nframes * (self.dt[1:] + self.triangle_sums[1:]/self.RM.RTS.nframes ) 
+        stddev = np.sqrt(var_signal+self.var_RON_per_diff+self.var_quant_per_diff)
+        deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
+        self.good_intervals = np.fabs( deltas/stddev) < CRthr
 
         check_CRs  = 1
         crloops_counter = 0
@@ -227,9 +248,10 @@ class IterativeFitter(object):
                 
 
             #test here for CR presence
-            stddev = np.sqrt(self.mean_electron_rate*self.dt[1:]+2*np.square(self.RM.RON_e))
-            diffs  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
-            new_good_intervals = np.fabs(diffs/stddev) < CRthr
+            var_signal_per_diff = self.mean_electron_rate/self.RM.RTS.nframes * (self.dt[1:] + self.triangle_sums[1:]/self.RM.RTS.nframes ) 
+            stddev = np.sqrt(var_signal+self.var_RON_per_diff+self.var_quant_per_diff)
+            deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
+            new_good_intervals = np.fabs(deltas/stddev) < CRthr
 
             if np.array_equal(self.good_intervals,new_good_intervals):
                 check_CRs = 0

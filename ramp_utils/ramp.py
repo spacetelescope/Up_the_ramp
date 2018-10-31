@@ -103,13 +103,21 @@ class RampTimeSeq(object):
             print("Allowed values for the detector parameter are  'GENERIC', 'HST/WFC3/IR', 'JWST/NIRCam' ")
             assert False
 
+        '''
+        Define the group times as the average of the read times of the kept frames for that group and define, lt, the sum of 
+        the lower-triangular matrix formed by the kept-reads times for that group. This term appears as (proportional to) the double
+        sum in eq (4) of Robberto et al. (2010): JWST-STScI-002161, and is important for calculating the noise of averaged groups
+        '''
 
         self.group_times = np.empty(self.ngroups)
+        self.lower_triangle_sum = np.empty(self.ngroups)
+        
         self.kept_reads = np.zeros_like(self.read_times,dtype=np.bool_)
         for i in range(self.ngroups):
             tt = self.read_times[i*(self.nframes+self.nskips):i*(self.nframes+self.nskips)+self.nframes]
             self.kept_reads[i*(self.nframes+self.nskips):i*(self.nframes+self.nskips)+self.nframes] = True
             self.group_times[i] = np.mean(tt)
+            self.lower_triangle_sum[i] = np.sum(np.tril(np.tile(tt,(tt.size,1)),k=-1))
 
 
     def test_plot(self):
