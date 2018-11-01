@@ -137,6 +137,9 @@ class IterativeFitter(object):
             attempts = attempts + 1
             
             if self.fitpars['one_iteration_method'] == 'Nelder-Mead':
+                '''
+                Define the initial simplex
+                '''
                 sim = np.empty((self.x_hat.size + 1, self.x_hat.size), dtype=self.x_hat.dtype)
                 sim[0] = self.x_hat
                 for k in range(self.x_hat.size):
@@ -214,7 +217,11 @@ class IterativeFitter(object):
         # Initial flagging of CR hits. Count-differences that deviate more than a certain threshold from the noise are flagged
         # The noise is computed starting from eq(4) of Robberto (2010), JWST-STScI-002161
         
-        var_signal_per_diff = self.mean_electron_rate/self.RM.RTS.nframes * (self.dt[1:] + self.triangle_sums[1:]/self.RM.RTS.nframes ) 
+        var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
+                               + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
+                               + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
+                               ) * self.mean_electron_rate
+        
         stddev = np.sqrt(var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
         deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
         self.good_intervals = np.fabs( deltas/stddev) < CRthr
@@ -248,7 +255,10 @@ class IterativeFitter(object):
                 
 
             #test here for CR presence
-            var_signal_per_diff = self.mean_electron_rate/self.RM.RTS.nframes * (self.dt[1:] + self.triangle_sums[1:]/self.RM.RTS.nframes ) 
+            var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
+                                   + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
+                                   + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
+                                   ) * self.mean_electron_rate
             stddev = np.sqrt(var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
             deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
             new_good_intervals = np.fabs(deltas/stddev) < CRthr
@@ -281,7 +291,7 @@ class IterativeFitter(object):
 
         :mode: the type of test perfomed.
 
-               Possible values are 'G-test', 'Pearson-chi-sq'
+               Possible values are 'G-test', 'Pearson-chi-sq', 'Squared-deviations'
 
                G-test: (https://en.wikipedia.org/wiki/G-test)
                    This is the default value.
@@ -290,7 +300,7 @@ class IterativeFitter(object):
 
                Pearson-chi-sq: (https://en.wikipedia.org/wiki/Pearson's_chi-squared_test)
                    Pearsons' chi square is implemented and should give similar results for moderately large observed count rates
-                   
+
                Squared deviations: (https://en.wikipedia.org/wiki/Reduced_chi-squared_statistic)
                    Use the variance of the counts plus the variance of the readnoise, summed together, as the
                    denominator 
@@ -299,20 +309,25 @@ class IterativeFitter(object):
 
         f_obs = (self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1])[self.good_intervals]
         f_exp = (self.mean_electron_rate * self.dt[1:]/self.RM.gain)[self.good_intervals]
-        ddof  = 1
-        dof   = np.sum(self.good_intervals) - 1 - ddof
 
         if mode == 'G-test':
+            ddof  = 1
+            dof   = np.sum(self.good_intervals) - 1 - ddof
             g,p = power_divergence(f_obs, f_exp=f_exp, ddof=ddof,  lambda_='log-likelihood')
 
         elif mode == 'Pearson-chi-sq':
+            ddof  = 1
+            dof   = np.sum(self.good_intervals) - 1 - ddof
             g,p = power_divergence(f_obs, f_exp=f_exp, ddof=ddof,  lambda_='pearson')
 
         elif mode == 'Squared-deviations':
-            variance = (f_exp+2*np.square(self.RM.RON_e))/np.square(self.RM.gain)
+            var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
+                                   + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
+                                   + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
+                                   ) * self.mean_electron_rate
             
-            var_signal_per_diff = self.mean_electron_rate/self.RM.RTS.nframes * (self.dt[1:] + self.triangle_sums[1:]/self.RM.RTS.nframes ) 
             variance = var_signal_per_diff[self.good_intervals]+self.var_RON_per_diff+self.var_quant_per_diff
+            dof   = np.sum(self.good_intervals) - 1            
             g = np.sum(np.square(f_obs-f_exp)/variance)
             p = chi2.sf(g,dof)      
 
