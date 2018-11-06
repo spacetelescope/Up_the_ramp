@@ -33,8 +33,8 @@ class IterativeFitter(object):
         of two lower-traingular matrices sum (derived from the second term in eq(4) of Roberto (2010) JWST-STScI-002161)
         '''
         
-        self.dt    = np.zeros_like(self.RM.noisy_counts)
-        self.triangle_sums = np.zeros_like(self.RM.noisy_counts)
+        self.dt    = np.zeros_like(self.RM.noisy_counts,dtype=np.float_)
+        self.triangle_sums = np.zeros_like(self.RM.noisy_counts,dtype=np.float_)
         for i in range(1,self.dt.size):
             self.dt[i] = self.RM.RTS.group_times[i] - self.RM.RTS.group_times[i-1] 
             self.triangle_sums[i] = self.RM.RTS.lower_triangle_sum[i] + self.RM.RTS.lower_triangle_sum[i-1]
@@ -176,7 +176,10 @@ class IterativeFitter(object):
                     self.x_hat = np.copy(self.x_new)
         
         electron_rates = (self.x_new[1:]-self.x_new[:-1])/self.dt[1:]
-        self.mean_electron_rate = np.average(electron_rates[self.good_intervals],weights=np.square(1./self.stddev[self.good_intervals]))
+        
+        weights = np.square(self.dt[1:]/self.stddev)
+        
+        self.mean_electron_rate = np.average(electron_rates[self.good_intervals],weights=weights[self.good_intervals])
         
         for i in range(len(self.RM.noisy_counts)):
             self.poisson_distr[i] = poisson(mu=self.mean_electron_rate*self.dt[i])
