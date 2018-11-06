@@ -176,8 +176,8 @@ class IterativeFitter(object):
                     self.x_hat = np.copy(self.x_new)
         
         electron_rates = (self.x_new[1:]-self.x_new[:-1])/self.dt[1:]
-        self.mean_electron_rate = np.mean(electron_rates[self.good_intervals])
-
+        self.mean_electron_rate = np.average(electron_rates[self.good_intervals],weights=np.square(1./self.stddev[self.good_intervals]))
+        
         for i in range(len(self.RM.noisy_counts)):
             self.poisson_distr[i] = poisson(mu=self.mean_electron_rate*self.dt[i])
 
@@ -217,14 +217,13 @@ class IterativeFitter(object):
         # Initial flagging of CR hits. Count-differences that deviate more than a certain threshold from the noise are flagged
         # The noise is computed starting from eq(4) of Robberto (2010), JWST-STScI-002161
         
-        var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
-                               + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
-                               + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
-                               ) * self.mean_electron_rate
-        
-        stddev = np.sqrt(var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
+        self.var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
+                                    + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
+                                    + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
+                                    ) * self.mean_electron_rate
+        self.stddev = np.sqrt(self.var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
         deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
-        self.good_intervals = np.fabs( deltas/stddev) < CRthr
+        self.good_intervals = np.fabs( deltas/self.stddev) < CRthr
 
         check_CRs  = 1
         crloops_counter = 0
@@ -255,20 +254,20 @@ class IterativeFitter(object):
                 
 
             #test here for CR presence
-            var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
-                                   + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
-                                   + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
-                                   ) * self.mean_electron_rate
-            stddev = np.sqrt(var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
+            self.var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
+                            + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
+                            + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
+                            ) * self.mean_electron_rate
+            self.stddev = np.sqrt(self.var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
             deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
-            new_good_intervals = np.fabs(deltas/stddev) < CRthr
+            new_good_intervals = np.fabs(deltas/self.stddev) < CRthr
 
             if np.array_equal(self.good_intervals,new_good_intervals):
                 check_CRs = 0
             else: 
                 self.good_intervals = new_good_intervals
                 electron_rates = (self.x_new[1:]-self.x_new[:-1])/self.dt[1:]
-                self.mean_electron_rate = np.mean(electron_rates[self.good_intervals])
+                self.mean_electron_rate = np.average(electron_rates[self.good_intervals],weights=np.square(1./self.stddev[self.good_intervals]))
    
                 
             if (crloops_counter > maxCRiter):
