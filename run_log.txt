@@ -1,11 +1,5 @@
 nohup: ignoring input
-/home/gennaro/anaconda3/lib/python3.5/site-packages/matplotlib/font_manager.py:273: UserWarning: Matplotlib is building the font cache using fc-list. This may take a moment.
-  warnings.warn('Matplotlib is building the font cache using fc-list. This may take a moment.')
-/home/gennaro/anaconda3/lib/python3.5/site-packages/matplotlib/font_manager.py:273: UserWarning: Matplotlib is building the font cache using fc-list. This may take a moment.
-  warnings.warn('Matplotlib is building the font cache using fc-list. This may take a moment.')
-Traceback (most recent call last):
-  File "Run_fitter.py", line 11, in <module>
-    from ramp_utils.fitter import IterativeFitter
-  File "/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py", line 6, in <module>
-    import emcee, corner, time
-ImportError: No module named 'emcee'
+Creating inputs files
+Created inputs files, time elapsed: 6.089534759521484 seconds
+Starting fit 0 of 2500
+Starting fit 200 of 2500

@@ -209,8 +209,8 @@ class IterativeFitter(object):
             to better than this noise floor, hence the effRON_e term in the sum
             '''
             
-            thr = np.sqrt(np.sum(np.square(np.array([self.RM.gain,self.RM.effRON_e])))) /self.RM.RTS.group_times[-1] 
-            #thr = self.RM.gain /self.RM.RTS.group_times[-1]
+            #thr = np.sqrt(np.sum(np.square(np.array([self.RM.gain,self.RM.effRON_e])))) /self.RM.RTS.group_times[-1] 
+            thr = self.RM.gain /self.RM.RTS.group_times[-1]
             
 
 

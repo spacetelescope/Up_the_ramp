@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# ## Script version of the notebook to run the fitter on multiple ramps
+# ## Notebook to run the fitter on multiple ramps
 
 # In[ ]:
 
@@ -21,7 +21,7 @@ from scipy.interpolate import interp1d
 
 
 dirsave = '/user/gennaro/Functional_work/Up_the_ramp_myfork/Simulations_results/'
-testname = '1'
+testname = '2'
 
 
 # In[ ]:
@@ -131,9 +131,6 @@ myramp5 = RampTimeSeq('GENERIC',ng,nframes=nf, nskips=ns, read_times=dt*np.arang
 myramp6 = RampTimeSeq('HST/WFC3/IR',15,samp_seq='SPARS100') 
 
 
-for ramp in [myramp6]:
-    ramp.test_plot()
-
 
 # ### Define the detector charachteristics
 # This step is necessary when the ramps are of **GENERIC** type
@@ -183,9 +180,9 @@ fitpars = {'one_iteration_method':'Nelder-Mead'}
 
 
 ntest      = 500
-printevery = 100
+printevery = 200
 n_jobs     = 40
-chunksize  = 10 
+chunksize  = 5 
 
 
 # ### Run the fitter on multiple ramps
@@ -260,7 +257,17 @@ else:
 
     ts = time.time()
     inputs = [ [mytuple[0],mytuple[1],mytuple[2],mytuple[3]] for mytuple in zip(myfluxes,myramps,myCRrates,mybgs) for k in range(ntest)]
-    meas_l, CRdict_l, extra_bg_l = map(list,zip(*mypool.starmap(one_meas,inputs,10)))
+
+    meas_l = []
+    CRdict_l = []
+    extra_bg_l = []
+    for inp in inputs:
+        m,c,e = one_meas(*inp)
+        meas_l.append(m)
+        CRdict_l.append(c)
+        extra_bg_l.append(e)
+    
+#    meas_l, CRdict_l, extra_bg_l = map(list,zip(*mypool.starmap(one_meas,inputs,10)))
     te = time.time()
     dicttosave={'myfluxes':myfluxes,
                 'myramps':myramps,
