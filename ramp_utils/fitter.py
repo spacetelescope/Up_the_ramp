@@ -235,7 +235,8 @@ class IterativeFitter(object):
             for l in range(k+1,self.stddev.size):
                 self.covmat[k,l] = self.covmat[l,k] =  (self.mean_electron_rate * self.RM.RTS.group_times[1+k] * (1.-1./self.RM.RTS.nframes)
                                                         -2*self.mean_electron_rate/np.square(self.RM.RTS.nframes)*self.RM.RTS.lower_triangle_sum[1+k]
-                                                        )/self.dt[1+k]/self.dt[1+l]
+                                                        -np.square(self.RM.RON_e)/self.RM.RTS.nframes
+                                                        -1./12.*np.square(self.RM.gain*self.RM.RTS.nframes))/self.dt[1+k]/self.dt[1+l]
 
 
         check_CRs  = 1
@@ -279,7 +280,8 @@ class IterativeFitter(object):
                 for l in range(k+1,self.stddev.size):
                     self.covmat[k,l] = self.covmat[l,k] =  (self.mean_electron_rate * self.RM.RTS.group_times[1+k] * (1.-1./self.RM.RTS.nframes)
                                                             -2*self.mean_electron_rate/np.square(self.RM.RTS.nframes)*self.RM.RTS.lower_triangle_sum[1+k]
-                                                            )/self.dt[1+k]/self.dt[1+l]
+                                                            -np.square(self.RM.RON_e)/self.RM.RTS.nframes
+                                                            -1./12.*np.square(self.RM.gain*self.RM.RTS.nframes))/self.dt[1+k]/self.dt[1+l]
 
 
             if np.array_equal(self.good_intervals,new_good_intervals):
@@ -368,15 +370,18 @@ class IterativeFitter(object):
             covmat = np.diag(variance)
             for k in range(self.stddev.size-1):
                 for l in range(k+1,self.stddev.size):
-                    self.covmat[k,l] = self.covmat[l,k] =  (self.mean_electron_rate * self.RM.RTS.group_times[1+k] * (1.-1./self.RM.RTS.nframes)
-                                                            -2*self.mean_electron_rate/np.square(self.RM.RTS.nframes)*self.RM.RTS.lower_triangle_sum[1+k]
-                                                            )
+                    covmat[k,l] = covmat[l,k] =  (self.mean_electron_rate * self.RM.RTS.group_times[1+k] * (1.-1./self.RM.RTS.nframes)
+                                                  -2*self.mean_electron_rate/np.square(self.RM.RTS.nframes)*self.RM.RTS.lower_triangle_sum[1+k]
+                                                  -np.square(self.RM.RON_e)/self.RM.RTS.nframes
+                                                  -1./12.*np.square(self.RM.gain*self.RM.RTS.nframes)
+                                                  )
+                                                            
 
             covmat = covmat/ np.square(self.RM.gain)
             covmat = covmat[np.ix_(self.good_intervals,self.good_intervals)]
             invcovmat = np.linalg.inv(covmat)
             dof   = np.sum(self.good_intervals) - 1            
-            g = np.matmult((f_obs-f_exp),np.matmult(invcovmat,(f_obs-f_exp)))
+            g = np.matmul((f_obs-f_exp),np.matmul(invcovmat,(f_obs-f_exp)))
             p = chi2.sf(g,dof)      
 
 
