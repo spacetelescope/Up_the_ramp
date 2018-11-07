@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from scipy.stats import poisson, norm, uniform, gamma, power_divergence, chi2
 from scipy.optimize import minimize
 from scipy.optimize.optimize import _minimize_neldermead
-import emcee, corner, time
 
 class IterativeFitter(object):
 
