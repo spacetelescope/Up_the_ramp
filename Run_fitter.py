@@ -182,8 +182,8 @@ fitpars = {'one_iteration_method':'Nelder-Mead'}
 # In[ ]:
 
 
-ntest      = 250
-printevery = 200
+ntest      = 500
+printevery = 100
 n_jobs     = 40
 chunksize  = 10 
 

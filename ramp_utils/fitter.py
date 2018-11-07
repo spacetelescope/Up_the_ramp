@@ -329,6 +329,7 @@ class IterativeFitter(object):
                                    ) * self.mean_electron_rate
             
             variance = var_signal_per_diff[self.good_intervals]+self.var_RON_per_diff+self.var_quant_per_diff
+            variance = variance / np.square(self.RM.gain)
             dof   = np.sum(self.good_intervals) - 1            
             g = np.sum(np.square(f_obs-f_exp)/variance)
             p = chi2.sf(g,dof)      
