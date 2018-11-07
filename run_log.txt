@@ -1,5 +1,8 @@
 nohup: ignoring input
-Creating inputs files
-Created inputs files, time elapsed: 6.089534759521484 seconds
+Input file already existing....loading
 Starting fit 0 of 2500
 Starting fit 200 of 2500
+Starting fit 400 of 2500
+Starting fit 600 of 2500
+Starting fit 800 of 2500
+Starting fit 1000 of 2500

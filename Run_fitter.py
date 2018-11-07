@@ -21,7 +21,7 @@ from scipy.interpolate import interp1d
 
 
 dirsave = '/user/gennaro/Functional_work/Up_the_ramp_myfork/Simulations_results/'
-testname = '2'
+testname = '1'
 
 
 # In[ ]:
