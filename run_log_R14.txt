@@ -1,0 +1,44 @@
+nohup: ignoring input
+Input file already existing....loading
+Starting fit 0 of 20000
+Starting fit 500 of 20000
+Starting fit 1000 of 20000
+Starting fit 1500 of 20000
+Starting fit 2000 of 20000
+Starting fit 2500 of 20000
+Starting fit 3000 of 20000
+Starting fit 3500 of 20000
+Starting fit 4000 of 20000
+Starting fit 4500 of 20000
+Starting fit 5000 of 20000
+Starting fit 5500 of 20000
+Starting fit 6000 of 20000
+Starting fit 6500 of 20000
+Starting fit 7000 of 20000
+Starting fit 7500 of 20000
+Starting fit 8000 of 20000
+Starting fit 8500 of 20000
+Starting fit 9000 of 20000
+Starting fit 9500 of 20000
+Starting fit 10000 of 20000
+Starting fit 10500 of 20000
+Starting fit 11000 of 20000
+Starting fit 11500 of 20000
+Starting fit 12000 of 20000
+Starting fit 12500 of 20000
+Starting fit 13000 of 20000
+Starting fit 13500 of 20000
+Starting fit 14000 of 20000
+Starting fit 14500 of 20000
+Starting fit 15000 of 20000
+Starting fit 15500 of 20000
+Starting fit 16000 of 20000
+Starting fit 16500 of 20000
+Starting fit 17000 of 20000
+Starting fit 17500 of 20000
+Starting fit 18000 of 20000
+Starting fit 18500 of 20000
+Starting fit 19000 of 20000
+Starting fit 19500 of 20000
+Elapsed time [minutes]: 150.69148072401683
+Time per fit [s]: 0.45207444217205045

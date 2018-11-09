@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from scipy.stats import poisson, norm, uniform, gamma, power_divergence, chi2
 from scipy.optimize import minimize
 from scipy.optimize.optimize import _minimize_neldermead
-import emcee, corner, time
 
 class IterativeFitter(object):
 
@@ -25,17 +24,26 @@ class IterativeFitter(object):
         else:
             self.fitpars = {'one_iteration_method':'Nelder-Mead'}
 
+
+
+        '''
+        Initialize the dt array (differences between the group times)
+        Also inizialize an array that contains the covariance error term for the count differences within an interval. This is the sum
+        of two lower-traingular matrices sum (derived from the second term in eq(4) of Roberto (2010) JWST-STScI-002161)
+        '''
+        
+        self.dt    = np.zeros_like(self.RM.noisy_counts,dtype=np.float_)
+        self.triangle_sums = np.zeros_like(self.RM.noisy_counts,dtype=np.float_)
+        for i in range(1,self.dt.size):
+            self.dt[i] = self.RM.RTS.group_times[i] - self.RM.RTS.group_times[i-1] 
+            self.triangle_sums[i] = self.RM.RTS.lower_triangle_sum[i] + self.RM.RTS.lower_triangle_sum[i-1]
+            
         '''
         Initialize the "hat" values. These are the latent poisson variables "actual number of electrons deposited in each interval"
         The _new values are the auxiliary variables used to iterate over the _hat ones
         '''
         
         self.x_hat = np.floor(self.RM.noisy_counts*self.RM.gain)
-        self.dt    = np.zeros_like(self.x_hat)
-
-        for i in range(1,self.dt.size):
-            self.dt[i] = self.RM.RTS.group_times[i] - self.RM.RTS.group_times[i-1] 
-
         
         for i in range(1,self.x_hat.size):
             if self.x_hat[i] < self.x_hat[i-1]:
@@ -60,6 +68,15 @@ class IterativeFitter(object):
         for i in range(len(self.RM.noisy_counts)):
             self.normal_distr.append(norm(loc=(self.RM.noisy_counts[i]*self.RM.gain),scale=self.RM.RON_e))
             self.poisson_distr.append(poisson(mu=self.mean_electron_rate*self.dt[i]))
+            
+            
+            
+        '''
+        Initialize a couple of auxiliary variables needed to compute the noise for each count difference
+        '''
+        self.var_RON_per_diff    = 2.*np.square(self.RM.RON_e)/self.RM.RTS.nframes
+        self.var_quant_per_diff  = 2./12.*np.square(self.RM.gain*self.RM.RTS.nframes)
+
 
     def loglikelihood_all(self,x):
         '''
@@ -119,6 +136,9 @@ class IterativeFitter(object):
             attempts = attempts + 1
             
             if self.fitpars['one_iteration_method'] == 'Nelder-Mead':
+                '''
+                Define the initial simplex
+                '''
                 sim = np.empty((self.x_hat.size + 1, self.x_hat.size), dtype=self.x_hat.dtype)
                 sim[0] = self.x_hat
                 for k in range(self.x_hat.size):
@@ -155,8 +175,14 @@ class IterativeFitter(object):
                     self.x_hat = np.copy(self.x_new)
         
         electron_rates = (self.x_new[1:]-self.x_new[:-1])/self.dt[1:]
-        self.mean_electron_rate = np.mean(electron_rates[self.good_intervals])
-
+        #weights = np.square(self.dt[1:]/self.stddev)
+        #self.mean_electron_rate = np.average(electron_rates[self.good_intervals],weights=weights[self.good_intervals])
+        
+        covmat_h    = self.covmat[np.ix_(self.good_intervals,self.good_intervals)]
+        invcovmat_h = np.linalg.inv(covmat_h)
+        sigmasq_h   = 1./np.sum(invcovmat_h)
+        self.mean_electron_rate = sigmasq_h*np.sum(np.matmul(invcovmat_h,electron_rates[self.good_intervals])) 
+        
         for i in range(len(self.RM.noisy_counts)):
             self.poisson_distr[i] = poisson(mu=self.mean_electron_rate*self.dt[i])
 
@@ -186,17 +212,32 @@ class IterativeFitter(object):
             to better than this noise floor, hence the effRON_e term in the sum
             '''
             
-            thr = np.sqrt(np.sum(np.square(np.array([self.RM.gain,self.RM.effRON_e])))) /self.RM.RTS.group_times[-1] 
-            #thr = self.RM.gain /self.RM.RTS.group_times[-1]
+            #thr = np.sqrt(np.sum(np.square(np.array([self.RM.gain,self.RM.effRON_e])))) /self.RM.RTS.group_times[-1] 
+            thr = self.RM.gain /self.RM.RTS.group_times[-1]
             
 
 
         old_mean_electron_rate = self.mean_electron_rate
             
-        #Initial flagging of CR hits
-        stddev = np.sqrt(self.mean_electron_rate*self.dt[1:]+2*np.square(self.RM.RON_e))
-        diffs  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
-        self.good_intervals = np.fabs( diffs/stddev) < CRthr
+        # Initial flagging of CR hits. Count-differences that deviate more than a certain threshold from the noise are flagged
+        # The noise is computed starting from eq(4) of Robberto (2010), JWST-STScI-002161
+        
+        self.var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
+                                    + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
+                                    + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
+                                    ) * self.mean_electron_rate
+        self.stddev = np.sqrt(self.var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
+        deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
+        self.good_intervals = np.fabs( deltas/self.stddev) < CRthr
+
+        self.covmat = np.diag(np.square(self.stddev/self.dt[1:]))
+        for k in range(self.stddev.size-1):
+            for l in range(k+1,self.stddev.size):
+                self.covmat[k,l] = self.covmat[l,k] =  (self.mean_electron_rate * self.RM.RTS.group_times[1+k] * (1.-1./self.RM.RTS.nframes)
+                                                        -2*self.mean_electron_rate/np.square(self.RM.RTS.nframes)*self.RM.RTS.lower_triangle_sum[1+k]
+                                                        -np.square(self.RM.RON_e)/self.RM.RTS.nframes
+                                                        -1./12.*np.square(self.RM.gain*self.RM.RTS.nframes))/self.dt[1+k]/self.dt[1+l]
+
 
         check_CRs  = 1
         crloops_counter = 0
@@ -227,16 +268,35 @@ class IterativeFitter(object):
                 
 
             #test here for CR presence
-            stddev = np.sqrt(self.mean_electron_rate*self.dt[1:]+2*np.square(self.RM.RON_e))
-            diffs  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
-            new_good_intervals = np.fabs(diffs/stddev) < CRthr
+            self.var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
+                            + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
+                            + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
+                            ) * self.mean_electron_rate
+            self.stddev = np.sqrt(self.var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
+            deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
+            new_good_intervals = np.fabs(deltas/self.stddev) < CRthr
+            self.covmat = np.diag(np.square(self.stddev/self.dt[1:]))
+            for k in range(self.stddev.size-1):
+                for l in range(k+1,self.stddev.size):
+                    self.covmat[k,l] = self.covmat[l,k] =  (self.mean_electron_rate * self.RM.RTS.group_times[1+k] * (1.-1./self.RM.RTS.nframes)
+                                                            -2*self.mean_electron_rate/np.square(self.RM.RTS.nframes)*self.RM.RTS.lower_triangle_sum[1+k]
+                                                            -np.square(self.RM.RON_e)/self.RM.RTS.nframes
+                                                            -1./12.*np.square(self.RM.gain*self.RM.RTS.nframes))/self.dt[1+k]/self.dt[1+l]
+
 
             if np.array_equal(self.good_intervals,new_good_intervals):
                 check_CRs = 0
             else: 
                 self.good_intervals = new_good_intervals
                 electron_rates = (self.x_new[1:]-self.x_new[:-1])/self.dt[1:]
-                self.mean_electron_rate = np.mean(electron_rates[self.good_intervals])
+                
+                covmat_h    = self.covmat[np.ix_(self.good_intervals,self.good_intervals)]
+                invcovmat_h = np.linalg.inv(covmat_h)
+                sigmasq_h   = 1./np.sum(invcovmat_h)
+                self.mean_electron_rate = sigmasq_h*np.sum(np.matmul(invcovmat_h,electron_rates[self.good_intervals])) 
+
+                
+#                self.mean_electron_rate = np.average(electron_rates[self.good_intervals],weights=np.square(1./self.stddev[self.good_intervals]))
    
                 
             if (crloops_counter > maxCRiter):
@@ -259,7 +319,7 @@ class IterativeFitter(object):
 
         :mode: the type of test perfomed.
 
-               Possible values are 'G-test', 'Pearson-chi-sq'
+               Possible values are 'G-test', 'Pearson-chi-sq', 'Squared-deviations'
 
                G-test: (https://en.wikipedia.org/wiki/G-test)
                    This is the default value.
@@ -268,7 +328,7 @@ class IterativeFitter(object):
 
                Pearson-chi-sq: (https://en.wikipedia.org/wiki/Pearson's_chi-squared_test)
                    Pearsons' chi square is implemented and should give similar results for moderately large observed count rates
-                   
+
                Squared deviations: (https://en.wikipedia.org/wiki/Reduced_chi-squared_statistic)
                    Use the variance of the counts plus the variance of the readnoise, summed together, as the
                    denominator 
@@ -277,19 +337,85 @@ class IterativeFitter(object):
 
         f_obs = (self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1])[self.good_intervals]
         f_exp = (self.mean_electron_rate * self.dt[1:]/self.RM.gain)[self.good_intervals]
-        ddof  = 1
-        dof   = np.sum(self.good_intervals) - 1 - ddof
 
         if mode == 'G-test':
+            ddof  = 1
+            dof   = np.sum(self.good_intervals) - 1 - ddof
             g,p = power_divergence(f_obs, f_exp=f_exp, ddof=ddof,  lambda_='log-likelihood')
 
         elif mode == 'Pearson-chi-sq':
+            ddof  = 1
+            dof   = np.sum(self.good_intervals) - 1 - ddof
             g,p = power_divergence(f_obs, f_exp=f_exp, ddof=ddof,  lambda_='pearson')
 
-        elif mode == 'Squared-deviations':
-            variance = (f_exp+2*np.square(self.RM.RON_e))/np.square(self.RM.gain)
+        elif mode == 'Squared-deviations-nocov':
+            var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
+                                   + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
+                                   + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
+                                   ) * self.mean_electron_rate
+            
+            variance = var_signal_per_diff[self.good_intervals]+self.var_RON_per_diff+self.var_quant_per_diff
+            variance = variance / np.square(self.RM.gain)
+            dof   = np.sum(self.good_intervals) - 1            
             g = np.sum(np.square(f_obs-f_exp)/variance)
             p = chi2.sf(g,dof)      
+            
+        elif mode == 'Squared-deviations':
+            var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
+                                   + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
+                                   + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
+                                   ) * self.mean_electron_rate
+            
+            variance = var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff
+            covmat = np.diag(variance)
+            for k in range(self.stddev.size-1):
+                for l in range(k+1,self.stddev.size):
+                    covmat[k,l] = covmat[l,k] =  (self.mean_electron_rate * self.RM.RTS.group_times[1+k] * (1.-1./self.RM.RTS.nframes)
+                                                  -2*self.mean_electron_rate/np.square(self.RM.RTS.nframes)*self.RM.RTS.lower_triangle_sum[1+k]
+                                                  -np.square(self.RM.RON_e)/self.RM.RTS.nframes
+                                                  -1./12.*np.square(self.RM.gain*self.RM.RTS.nframes)
+                                                  )
+                                                            
+            covmat    = covmat/np.square(self.RM.gain)
+            covmat    = covmat[np.ix_(self.good_intervals,self.good_intervals)]
+            invcovmat = np.linalg.inv(covmat)
+            dof       = np.sum(self.good_intervals) - 1            
+#            x0 = self.dt[1:][self.good_intervals]
+#            H_p1 = 1/np.matmul(x0,np.matmul(invcovmat,x0))
+#            H_p2 = np.matmul(x0,invcovmat)
+#            H    = np.outer(x0,H_p1*H_p2)
+#            I    = np.diag(np.ones(H.shape[0]))
+#            M1 = I-H
+#            M2 = M1.T
+#            dof = np.trace(np.matmul(M2,M1))           
+            g = np.matmul((f_obs-f_exp),np.matmul(invcovmat,(f_obs-f_exp)))
+            p = chi2.sf(g,dof) 
+            
+        elif mode == 'poisson-likelihood':
+
+            poisson_lpmf = np.empty_like(self.dt,dtype=np.float_)
+            for i in range(len(poisson_lpmf)):
+                if i == 0:
+                    poisson_lpmf[i] = 0.
+                else:
+                    if self.x_new[i] < self.x_new[i-1]:
+                        poisson_lpmf[i] = np.inf
+                    else:
+                        poisson_lpmf[i] = self.poisson_distr[i].logpmf(self.x_new[i]-self.x_new[i-1])
+            
+            g = np.sum(poisson_lpmf[1:][self.good_intervals])
+            ncompare = 10000
+            lpmfs = np.empty([ncompare,np.sum(self.good_intervals)])
+             
+            i = 0
+            for k in np.nonzero(self.good_intervals)[0]:
+                rv = self.poisson_distr[k+1].rvs(size=ncompare)
+                lpmfs[:,i] = self.poisson_distr[k+1].logpmf(rv) 
+                i = i+1
+             
+            loglik_compare = np.sum(lpmfs,axis=1)
+            BM = g > loglik_compare
+            p = np.sum(BM).astype(np.float_)/ncompare
 
 
         else:
@@ -309,7 +435,7 @@ class IterativeFitter(object):
         ax.scatter(self.RM.RTS.group_times,self.RM.noisy_counts-self.RM.RON_effective/self.RM.gain,label='Noiseless Counts + \n Bias + KTC + CRs',s=25)
         ax.scatter(self.RM.RTS.group_times,self.RM.noisy_counts-(self.RM.RON_effective-np.mean(self.RM.RON_effective))/self.RM.gain,label='Noiseless Counts + \n Bias + KTC +\n mean RON',s=25)
         
-        ax.plot(self.RM.RTS.group_times,(self.x_new[0]+self.mean_electron_rate*self.RM.RTS.group_times)/self.RM.gain)
+        ax.plot(self.RM.RTS.group_times,(self.x_new[0]+self.mean_electron_rate*(self.RM.RTS.group_times-self.RM.RTS.group_times[0]))/self.RM.gain)
 
         for j,gi in enumerate(self.good_intervals):
             if ~gi:

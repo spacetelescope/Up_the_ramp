@@ -103,13 +103,21 @@ class RampTimeSeq(object):
             print("Allowed values for the detector parameter are  'GENERIC', 'HST/WFC3/IR', 'JWST/NIRCam' ")
             assert False
 
+        '''
+        Define the group times as the average of the read times of the kept frames for that group and define, lt, the sum of 
+        the lower-triangular matrix formed by the kept-reads times for that group. This term appears as (proportional to) the double
+        sum in eq (4) of Robberto et al. (2010): JWST-STScI-002161, and is important for calculating the noise of averaged groups
+        '''
 
         self.group_times = np.empty(self.ngroups)
+        self.lower_triangle_sum = np.empty(self.ngroups)
+        
         self.kept_reads = np.zeros_like(self.read_times,dtype=np.bool_)
         for i in range(self.ngroups):
             tt = self.read_times[i*(self.nframes+self.nskips):i*(self.nframes+self.nskips)+self.nframes]
             self.kept_reads[i*(self.nframes+self.nskips):i*(self.nframes+self.nskips)+self.nframes] = True
             self.group_times[i] = np.mean(tt)
+            self.lower_triangle_sum[i] = np.sum(np.tril(np.tile(tt,(tt.size,1)),k=-1))
 
 
     def test_plot(self):
@@ -154,7 +162,7 @@ class RampMeasurement(object):
         the standard deviation of the KTC noise for the 0th frame in e-
 
     :bias:
-        a np.float
+        a np.int
         the mean of the bias level in adu
         
 
@@ -162,7 +170,7 @@ class RampMeasurement(object):
     def __init__(self,RTS,flux,gain=None,RON=None,KTC=None,bias=None,full_well=None,CRdict=None):
 
         self.RTS = RTS
-        self.flux = flux
+        self.flux = 1.*flux
         self.CRdict = CRdict
 
         if self.RTS.detector == 'GENERIC':
@@ -188,8 +196,8 @@ class RampMeasurement(object):
 
             self.gain = gain
             
-            self.bias_adu = bias 
-            self.bias_e   = self.bias_adu*self.gain
+            self.bias_adu = bias
+            self.bias_e   = np.rint(self.bias_adu*self.gain)
 
             self.KTC_e = KTC
             self.KTC_adu = self.KTC_e/self.gain
@@ -216,7 +224,7 @@ class RampMeasurement(object):
             u1k1727mi_lin.fits nlinfit file
             '''
             self.bias_adu = 11075 
-            self.bias_e   = np.rint(self.bias_adu*self.gain).astype(np.int_)
+            self.bias_e   = np.rint(self.bias_adu*self.gain)
 
             '''
             This KTC noise (in electrons) comes from Massimo Robberto (priv. comm.) estimate of the
@@ -296,7 +304,7 @@ class RampMeasurement(object):
         '''
         Add bias as a constant
         '''
-        self.noisy_electrons_reads = self.electrons_reads + self.bias_e
+        self.noisy_electrons_reads = (self.electrons_reads + self.bias_e).astype(np.float_)
 
         '''
         Add KTC noise as random gaussian (since KTC is added at reset, it is the same value for all reads)
