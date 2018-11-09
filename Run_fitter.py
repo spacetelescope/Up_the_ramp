@@ -130,7 +130,11 @@ myramp5 = RampTimeSeq('GENERIC',ng,nframes=nf, nskips=ns, read_times=dt*np.arang
 
 myramp6 = RampTimeSeq('HST/WFC3/IR',15,samp_seq='SPARS100') 
 
+dt,nf,ns,ng = 10., 1, 0, 10
+ramp_R14_1 = RampTimeSeq('GENERIC',ng,nframes=nf, nskips=ns, read_times=dt*np.arange(ng*(nf+ns)))
 
+dt,nf,ns,ng = 10., 4, 0, 10
+ramp_R14_4 = RampTimeSeq('GENERIC',ng,nframes=nf, nskips=ns, read_times=dt*np.arange(ng*(nf+ns)))
 
 # ### Define the detector charachteristics
 # This step is necessary when the ramps are of **GENERIC** type
@@ -138,9 +142,9 @@ myramp6 = RampTimeSeq('HST/WFC3/IR',15,samp_seq='SPARS100')
 # In[ ]:
 
 
-gain=1
-RON=20
-KTC=50
+gain=1.
+RON=15.
+KTC=0.
 bias=10000
 full_well=100000
 
@@ -150,17 +154,21 @@ full_well=100000
 # In[ ]:
 
 
-myfluxes   = [   0.05,     4,      64,    0.5,    0.5]
-myramps    = [myramp6,myramp6,myramp6,myramp6,myramp6]
-myCRrates  = [   5e-4,   5e-4,   5e-4,     0.,     0.]
+#myfluxes   = [   0.05,     4,      64,    0.5,    0.5,    0.5,    0.5]
+#myramps    = [myramp6,myramp6,myramp6,myramp6,myramp6,myramp6,myramp6]
+#myCRrates  = [   5e-4,   5e-4,   5e-4,     0.,     0.,     0.,     0.]
+#tbg  = np.linspace(0,1500,10)
+#cbg  = np.array([1.0,1.2,1.5,1.3,1.7,2.0,2.2,2.4,2.0,1.5])
 
-tbg  = np.linspace(0,1500,10)
-cbg  = np.array([1.0,1.2,1.5,1.3,1.7,2.0,2.2,2.4,2.0,1.5])
+#mybgs      = [   None,   None,   None,   None, 
+#               {'times':tbg,'vbg_er':cbg,'mean_bg_er':1.},
+#               {'times':tbg,'vbg_er':np.power(cbg,3),'mean_bg_er':1.},
+#               {'times':tbg,'vbg_er':cbg,'mean_bg_er':2.},]
 
-mybgs      = [   None,   None,   None,   None, 
-         {'times':tbg,'vbg_er':cbg,'mean_bg_er':1.},
-        ]
-
+myfluxes  = [        9.,        9.]
+myramps   = [ramp_R14_1,ramp_R14_4]
+myCRrates = [        0.,        0.]
+mybgs     = [      None,      None]
 
 if (len(myfluxes) == len(myramps) == len(myCRrates) == len(mybgs)) == False:
     assert False
@@ -179,10 +187,10 @@ fitpars = {'one_iteration_method':'Nelder-Mead'}
 # In[ ]:
 
 
-ntest      = 500
-printevery = 200
-n_jobs     = 40
-chunksize  = 5 
+ntest      = 10000
+printevery = 500
+n_jobs     = 30
+chunksize  = 15 
 
 
 # ### Run the fitter on multiple ramps
@@ -201,7 +209,7 @@ def one_fit(l,meas):
     fitter = IterativeFitter(meas,fitpars = fitpars)
     error,counter, goodints, crloops_counter  = fitter.perform_fit()
     outerate = fitter.mean_electron_rate
-    fitter.goodness_of_fit(mode='Squared-deviations')
+    fitter.goodness_of_fit(mode='poisson-likelihood')
     gof_stat = fitter.gof_stat
     gof_pval = fitter.gof_pval
      
@@ -248,7 +256,7 @@ if os.path.isfile(inputs_file) == True:
     mybgs      = dictoload['mybgs']
     CRdict_l   = dictoload['CRdict_l']
     extra_bg_l = dictoload['extra_bg_l']
-    
+    ntest      = len(meas_l)
     del(dictoload)
     
 else:
@@ -266,8 +274,6 @@ else:
         meas_l.append(m)
         CRdict_l.append(c)
         extra_bg_l.append(e)
-    
-#    meas_l, CRdict_l, extra_bg_l = map(list,zip(*mypool.starmap(one_meas,inputs,10)))
     te = time.time()
     dicttosave={'myfluxes':myfluxes,
                 'myramps':myramps,

@@ -366,7 +366,7 @@ class IterativeFitter(object):
                                    + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
                                    ) * self.mean_electron_rate
             
-            variance = var_signal_per_diff[self.good_intervals]+self.var_RON_per_diff+self.var_quant_per_diff
+            variance = var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff
             covmat = np.diag(variance)
             for k in range(self.stddev.size-1):
                 for l in range(k+1,self.stddev.size):
@@ -376,13 +376,46 @@ class IterativeFitter(object):
                                                   -1./12.*np.square(self.RM.gain*self.RM.RTS.nframes)
                                                   )
                                                             
-
-            covmat = covmat/ np.square(self.RM.gain)
-            covmat = covmat[np.ix_(self.good_intervals,self.good_intervals)]
+            covmat    = covmat/np.square(self.RM.gain)
+            covmat    = covmat[np.ix_(self.good_intervals,self.good_intervals)]
             invcovmat = np.linalg.inv(covmat)
-            dof   = np.sum(self.good_intervals) - 1            
+            dof       = np.sum(self.good_intervals) - 1            
+#            x0 = self.dt[1:][self.good_intervals]
+#            H_p1 = 1/np.matmul(x0,np.matmul(invcovmat,x0))
+#            H_p2 = np.matmul(x0,invcovmat)
+#            H    = np.outer(x0,H_p1*H_p2)
+#            I    = np.diag(np.ones(H.shape[0]))
+#            M1 = I-H
+#            M2 = M1.T
+#            dof = np.trace(np.matmul(M2,M1))           
             g = np.matmul((f_obs-f_exp),np.matmul(invcovmat,(f_obs-f_exp)))
-            p = chi2.sf(g,dof)      
+            p = chi2.sf(g,dof) 
+            
+        elif mode == 'poisson-likelihood':
+
+            poisson_lpmf = np.empty_like(self.dt,dtype=np.float_)
+            for i in range(len(poisson_lpmf)):
+                if i == 0:
+                    poisson_lpmf[i] = 0.
+                else:
+                    if self.x_new[i] < self.x_new[i-1]:
+                        poisson_lpmf[i] = np.inf
+                    else:
+                        poisson_lpmf[i] = self.poisson_distr[i].logpmf(self.x_new[i]-self.x_new[i-1])
+            
+            g = np.sum(poisson_lpmf[1:][self.good_intervals])
+            ncompare = 10000
+            lpmfs = np.empty([ncompare,np.sum(self.good_intervals)])
+             
+            i = 0
+            for k in np.nonzero(self.good_intervals)[0]:
+                rv = self.poisson_distr[k+1].rvs(size=ncompare)
+                lpmfs[:,i] = self.poisson_distr[k+1].logpmf(rv) 
+                i = i+1
+             
+            loglik_compare = np.sum(lpmfs,axis=1)
+            BM = g > loglik_compare
+            p = np.sum(BM).astype(np.float_)/ncompare
 
 
         else:
@@ -402,7 +435,7 @@ class IterativeFitter(object):
         ax.scatter(self.RM.RTS.group_times,self.RM.noisy_counts-self.RM.RON_effective/self.RM.gain,label='Noiseless Counts + \n Bias + KTC + CRs',s=25)
         ax.scatter(self.RM.RTS.group_times,self.RM.noisy_counts-(self.RM.RON_effective-np.mean(self.RM.RON_effective))/self.RM.gain,label='Noiseless Counts + \n Bias + KTC +\n mean RON',s=25)
         
-        ax.plot(self.RM.RTS.group_times,(self.x_new[0]+self.mean_electron_rate*self.RM.RTS.group_times)/self.RM.gain)
+        ax.plot(self.RM.RTS.group_times,(self.x_new[0]+self.mean_electron_rate*(self.RM.RTS.group_times-self.RM.RTS.group_times[0]))/self.RM.gain)
 
         for j,gi in enumerate(self.good_intervals):
             if ~gi:
