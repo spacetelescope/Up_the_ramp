@@ -180,8 +180,8 @@ class IterativeFitter(object):
         
         covmat_h    = self.covmat[np.ix_(self.good_intervals,self.good_intervals)]
         invcovmat_h = np.linalg.inv(covmat_h)
-        sigmasq_h   = 1./np.sum(invcovmat_h)
-        self.mean_electron_rate = sigmasq_h*np.sum(np.matmul(invcovmat_h,electron_rates[self.good_intervals])) 
+        self.sigmasq_h   = 1./np.sum(invcovmat_h)
+        self.mean_electron_rate = self.sigmasq_h*np.sum(np.matmul(invcovmat_h,electron_rates[self.good_intervals])) 
         
         for i in range(len(self.RM.noisy_counts)):
             self.poisson_distr[i] = poisson(mu=self.mean_electron_rate*self.dt[i])
@@ -292,8 +292,8 @@ class IterativeFitter(object):
                 
                 covmat_h    = self.covmat[np.ix_(self.good_intervals,self.good_intervals)]
                 invcovmat_h = np.linalg.inv(covmat_h)
-                sigmasq_h   = 1./np.sum(invcovmat_h)
-                self.mean_electron_rate = sigmasq_h*np.sum(np.matmul(invcovmat_h,electron_rates[self.good_intervals])) 
+                self.sigmasq_h   = 1./np.sum(invcovmat_h)
+                self.mean_electron_rate = self.sigmasq_h*np.sum(np.matmul(invcovmat_h,electron_rates[self.good_intervals])) 
 
                 
 #                self.mean_electron_rate = np.average(electron_rates[self.good_intervals],weights=np.square(1./self.stddev[self.good_intervals]))
