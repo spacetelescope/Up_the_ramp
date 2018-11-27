@@ -1,0 +1,63 @@
+# Just a place to keep some ramps definitions and copy them easily into Create_inputs.py
+
+# ### Define the read sequences
+
+# In[ ]:
+
+
+dt,nf,ns,ng = 6.,1,0,17
+myramp1 = RampTimeSeq('GENERIC',ng,nframes=nf, nskips=ns, read_times=dt*np.arange(ng*(nf+ns)))
+
+dt,nf,ns,ng = 8.,1,0,13
+myramp2 = RampTimeSeq('GENERIC',ng,nframes=nf, nskips=ns, read_times=dt*np.arange(ng*(nf+ns)))
+
+dt,nf,ns,ng = 12.,1,0,9
+myramp3 = RampTimeSeq('GENERIC',ng,nframes=nf, nskips=ns, read_times=dt*np.arange(ng*(nf+ns)))
+
+dt,nf,ns,ng = 16.,1,0,7
+myramp4 = RampTimeSeq('GENERIC',ng,nframes=nf, nskips=ns, read_times=dt*np.arange(ng*(nf+ns)))
+
+dt,nf,ns,ng = 24.,1,0,5
+myramp5 = RampTimeSeq('GENERIC',ng,nframes=nf, nskips=ns, read_times=dt*np.arange(ng*(nf+ns)))
+
+
+myramp6 = RampTimeSeq('HST/WFC3/IR',15,samp_seq='SPARS100') 
+
+dt,nf,ns,ng = 10., 1, 0, 10
+ramp_R14_1 = RampTimeSeq('GENERIC',ng,nframes=nf, nskips=ns, read_times=dt*np.arange(ng*(nf+ns)))
+
+dt,nf,ns,ng = 10., 4, 0, 10
+ramp_R14_4 = RampTimeSeq('GENERIC',ng,nframes=nf, nskips=ns, read_times=dt*np.arange(ng*(nf+ns)))
+
+# ### Define the detector charachteristics
+# This step is necessary when the ramps are of **GENERIC** type
+
+# In[ ]:
+
+mdict={'gain'=1.,
+       'RON'=15.,
+       'KTC'=0.,
+       'bias'=10000,
+       'full_well'=100000
+      }
+
+# ### Setup the properties of the measurements on which to run the fitter
+
+# In[ ]:
+
+
+#myfluxes   = [   0.05,     4,      64,    0.5,    0.5,    0.5,    0.5]
+#myramps    = [myramp6,myramp6,myramp6,myramp6,myramp6,myramp6,myramp6]
+#myCRrates  = [   5e-4,   5e-4,   5e-4,     0.,     0.,     0.,     0.]
+#tbg  = np.linspace(0,1500,10)
+#cbg  = np.array([1.0,1.2,1.5,1.3,1.7,2.0,2.2,2.4,2.0,1.5])
+
+#mybgs      = [   None,   None,   None,   None, 
+#               {'times':tbg,'vbg_er':cbg,'mean_bg_er':1.},
+#               {'times':tbg,'vbg_er':np.power(cbg,3),'mean_bg_er':1.},
+#               {'times':tbg,'vbg_er':cbg,'mean_bg_er':2.},]
+
+myfluxes  = [        9.,        9.]
+myramps   = [ramp_R14_1,ramp_R14_4]
+myCRrates = [        0.,        0.]
+mybgs     = [      None,      None]
