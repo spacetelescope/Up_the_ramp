@@ -21,17 +21,28 @@ from scipy.interpolate import interp1d
 
 
 dirsave = '/user/gennaro/Functional_work/Up_the_ramp_myfork/Simulations_results/'
-testname = 'SNR_010'
+testname = 'BKG_1p0_pow3p0'
 
 #Set the measurement properties here
 
-myramps   = [RampTimeSeq('HST/WFC3/IR',13,samp_seq='STEP200')]
-myfluxes  = [0.1]
-myCRrates = [5e-4]
-mybgs     = [None]
+myramps   = [RampTimeSeq('HST/WFC3/IR',15,samp_seq='SPARS100')]
+myfluxes  = [0.5]
+myCRrates = [0.]
+
+
+tbg  = np.linspace(0,1500,10)
+cbg  = np.array([1.0,1.2,1.5,1.3,1.7,2.0,2.2,2.4,2.0,1.5])
+
+#mybgs      = [   None,   None,   None,   None, 
+#               {'times':tbg,'vbg_er':cbg,'mean_bg_er':1.},
+#               {'times':tbg,'vbg_er':np.power(cbg,3),'mean_bg_er':1.},
+#               {'times':tbg,'vbg_er':cbg,'mean_bg_er':2.},]
+
+
+mybgs     = [{'times':tbg,'vbg_er':np.power(cbg,3.0),'mean_bg_er':1.0}]
 mymdict   = None
 
-ntest     = 50#16384
+ntest     = 10000
 
 
 # In[ ]:

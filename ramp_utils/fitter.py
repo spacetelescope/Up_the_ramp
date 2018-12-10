@@ -248,7 +248,7 @@ class IterativeFitter(object):
             else:
                 self.counter    = 0
                 self.error      = 2
-                return self.error, self.counter, self.good_intervals, selfcrloops_counter
+                return self.error, self.counter, self.good_intervals, self.crloops_counter
 
             while check_conv:
 

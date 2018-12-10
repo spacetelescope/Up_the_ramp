@@ -37,9 +37,9 @@ fitpars = {'one_iteration_method':'Nelder-Mead'}
 
 # In[ ]:
 
-printevery = 1
-n_jobs     = 10
-chunksize  = 1 
+printevery = 100
+n_jobs     = 5
+chunksize  = 10 
 
 
 # ### Run the fitter on multiple ramps
