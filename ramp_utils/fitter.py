@@ -87,7 +87,7 @@ class IterativeFitter(object):
 
         '''
 
-        xr = np.round(x).astype(np.int_)
+        #xr = np.round(x).astype(np.int_) #Mario: rounded version
         
         poisson_pmf  = np.empty_like(x)
         gaussian_pdf = np.empty_like(x)
@@ -96,13 +96,13 @@ class IterativeFitter(object):
             if i == 0:
                 poisson_pmf[i] = 1.
             else:
-                if xr[i] < xr[i-1]:
+                if x[i] < x[i-1]:  #Mario: rounded version
                     return np.inf
                 else:
-                    poisson_pmf[i]  = self.poisson_distr[i].pmf(xr[i]-xr[i-1])
-            gaussian_pdf[i] = self.normal_distr[i].pdf(xr[i])
+                    poisson_pmf[i]  = self.poisson_distr[i].pmf(np.round(x[i]-x[i-1]).astype(np.int_)) #Mario: rounded version
+            gaussian_pdf[i] = self.normal_distr[i].pdf(x[i]) #Mario: rounded version
  
-        keep_grps = np.empty_like(xr,dtype=np.bool_)
+        keep_grps = np.empty_like(x,dtype=np.bool_) #Mario: rounded version
         for i in range(self.RM.RTS.ngroups):
             if i == 0:
                 intdw = i
@@ -144,7 +144,7 @@ class IterativeFitter(object):
                     for i in range(1,self.x_hat.size):
                         if y[i] < y[i-1]:
                             y[i] = y[i-1]
-                    sim[k+1] = y+np.mean(self.RM.noisy_counts*self.RM.gain)-np.mean(y)
+                    sim[k+1] = y + np.mean(self.RM.noisy_counts*self.RM.gain) - np.mean(y)
             
                 self.minimize_res = _minimize_neldermead(self.loglikelihood_all,self.x_hat,initial_simplex=sim)
             else:
@@ -153,7 +153,7 @@ class IterativeFitter(object):
             
             success = self.minimize_res['success']
             if success == True:
-                self.x_new = np.round(self.minimize_res['x'])
+                self.x_new = np.copy(self.minimize_res['x'])  #Mario: rounded version
                 self.x_hat = np.copy(self.x_new)
             else:
                 '''
@@ -168,11 +168,11 @@ class IterativeFitter(object):
 
                 if attempts >= conv_attempts:
                     success = True
-                    self.x_new = np.round(self.minimize_res['x'])
+                    self.x_new = np.round(self.minimize_res['x']) + np.random.normal(scale=self.RM.RON_e,size=self.x_new.size)
                     for i in range(1,self.x_new.size):
                         if self.x_new[i] < self.x_new[i-1]:
                             self.x_new[i] = self.x_new[i-1]
-                    self.x_new = self.x_new+np.mean(self.RM.noisy_counts*self.RM.gain)-np.mean(self.x_new)
+                    self.x_new = self.x_new + np.mean(self.RM.noisy_counts*self.RM.gain) - np.mean(self.x_new)
                     self.x_hat = np.copy(self.x_new)
         
         electron_rates = (self.x_new[1:]-self.x_new[:-1])/self.dt[1:]
@@ -254,7 +254,7 @@ class IterativeFitter(object):
 
                 self.one_iteration()
                 self.counter = self.counter+1
-                if np.fabs(self.mean_electron_rate-old_mean_electron_rate) < thr:
+                if (np.fabs(self.mean_electron_rate-old_mean_electron_rate) < thr) & (self.mean_electron_rate > 0.):
                     check_conv = 0
                 if (self.counter > maxiter):
                     self.error = 1
@@ -425,7 +425,7 @@ class IterativeFitter(object):
                             gaussian_lpdf[i] = -np.inf
                            
                         else:
-                            poisson_lpmf[i] = self.poisson_distr[i].logpmf(self.x_new[i]-self.x_new[i-1])
+                            poisson_lpmf[i] = self.poisson_distr[i].logpmf(np.round(self.x_new[i]-self.x_new[i-1])) #Mario:rounded version
                             gauss_distr = norm(loc=self.RM.gain*(self.RM.noisy_counts[i]-self.RM.noisy_counts[i-1]),
                                            scale=np.sqrt(2)*self.RM.RON_e)
                             gaussian_lpdf[i] = gauss_distr.logpdf(self.x_new[i]-self.x_new[i-1])

@@ -220,5 +220,5 @@ Finished fit 9900 of 10000
   return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
 /home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:528: RuntimeWarning: invalid value encountered in subtract
   numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
-Elapsed time [minutes]: 1893.2194898883502
-Time per fit [s]: 11.359316939330101
+Elapsed time [minutes]: 2203.070554002126
+Time per fit [s]: 13.218423324012756

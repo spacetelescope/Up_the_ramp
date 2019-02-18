@@ -220,25 +220,5 @@ Finished fit 9900 of 10000
   return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
 /home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:528: RuntimeWarning: invalid value encountered in subtract
   numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
-/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
-  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
-/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:528: RuntimeWarning: invalid value encountered in subtract
-  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
-/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
-  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
-/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:528: RuntimeWarning: invalid value encountered in subtract
-  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
-/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
-  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
-/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:528: RuntimeWarning: invalid value encountered in subtract
-  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
-/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
-  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
-/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:528: RuntimeWarning: invalid value encountered in subtract
-  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
-/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
-  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
-/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:528: RuntimeWarning: invalid value encountered in subtract
-  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
-Elapsed time [minutes]: 19.77625154654185
-Time per fit [s]: 0.1186575092792511
+Elapsed time [minutes]: 113.03712994257609
+Time per fit [s]: 0.6782227796554565

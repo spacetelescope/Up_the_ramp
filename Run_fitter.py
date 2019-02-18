@@ -21,7 +21,7 @@ from scipy.interpolate import interp1d
 
 
 dirsave = '/user/gennaro/Functional_work/Up_the_ramp_myfork/Simulations_results/'
-testname = 'R14'
+testname = 'STEP200_NSAMP13_SNR10_round'
 
 outputs_file = dirsave+'Test_'+testname+'_out.pbz2'
 inputs_file  = dirsave+'Test_'+testname+'_in.pbz2'
@@ -37,8 +37,8 @@ fitpars = {'one_iteration_method':'Nelder-Mead'}
 
 # In[ ]:
 
-printevery = 100
-n_jobs     = 5
+printevery = 200
+n_jobs     = 15
 chunksize  = 10 
 
 
