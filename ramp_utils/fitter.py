@@ -466,19 +466,57 @@ class IterativeFitter(object):
         '''
         Method to plot the fit results
         '''
-        f,ax = plt.subplots(1,1,figsize=(10,5))
-        ax.scatter(self.RM.RTS.group_times,self.RM.noisy_counts,label='Noisy Counts',s=100,marker='*')
-        ax.scatter(self.RM.RTS.group_times,self.x_new/self.RM.gain,label='Convergence counts',s=25)
-        ax.scatter(self.RM.RTS.group_times,self.RM.noisy_counts-self.RM.RON_effective/self.RM.gain,label='Noiseless Counts + \n Bias + KTC + CRs',s=25)
-        ax.scatter(self.RM.RTS.group_times,self.RM.noisy_counts-(self.RM.RON_effective-np.mean(self.RM.RON_effective))/self.RM.gain,label='Noiseless Counts + \n Bias + KTC +\n mean RON',s=25)
+        f,ax = plt.subplots(1,2,figsize=(12,4),sharex='row')
+        ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts,label='Noisy Counts',s=100,marker='*')
+        ax[0].scatter(self.RM.RTS.group_times,self.x_new/self.RM.gain,label='Convergence counts',s=25)
+        ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-self.RM.RON_effective/self.RM.gain,label='Noiseless Counts + \n Bias + KTC + CRs',s=25)
+        ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-(self.RM.RON_effective-np.mean(self.RM.RON_effective))/self.RM.gain,label='Noiseless Counts + \n Bias + KTC +\n mean RON',s=25)
         
-        ax.plot(self.RM.RTS.group_times,(self.x_new[0]+self.mean_electron_rate*(self.RM.RTS.group_times-self.RM.RTS.group_times[0]))/self.RM.gain)
+        ax[0].plot(self.RM.RTS.group_times,(self.x_new[0]+self.mean_electron_rate*(self.RM.RTS.group_times-self.RM.RTS.group_times[0]))/self.RM.gain)
 
         for j,gi in enumerate(self.good_intervals):
             if ~gi:
-                ax.axvline(0.5*(self.RM.RTS.group_times[j]+self.RM.RTS.group_times[j+1]),color='#bbbbbb',linestyle='--')
+                ax[0].axvline(0.5*(self.RM.RTS.group_times[j]+self.RM.RTS.group_times[j+1]),color='#bbbbbb',linestyle='--')
             
-        ax.legend()
+        ax[0].legend()
+        ax[0].set_xlabel('Time [s]')
+        ax[0].set_ylabel('Counts')
+        ax[0].set_title('Cumulative counts')
+
+        mt = 0.5*(self.RM.RTS.group_times[1:]+self.RM.RTS.group_times[:-1])
+        dt = self.RM.RTS.group_times[1:]-self.RM.RTS.group_times[:-1]
+
+        y = self.RM.noisy_counts
+        y = (y[1:]-y[:-1])/dt
+        ax[1].scatter(mt,y,label='Noisy Counts',s=100,marker='*')
+        
+        y = self.x_new/self.RM.gain
+        y = (y[1:]-y[:-1])/dt
+        ax[1].scatter(mt,y,label='Convergence counts',s=25)
+        
+        y = self.RM.noisy_counts-self.RM.RON_effective/self.RM.gain
+        y = (y[1:]-y[:-1])/dt
+        ax[1].scatter(mt,y,label='Noiseless Counts + \n Bias + KTC + CRs',s=25)
+        
+        y = self.RM.noisy_counts-(self.RM.RON_effective-np.mean(self.RM.RON_effective))/self.RM.gain
+        y = (y[1:]-y[:-1])/dt        
+        ax[1].scatter(mt,y,label='Noiseless Counts + \n Bias + KTC +\n mean RON',s=25)
+        
+        ax[1].plot(mt,self.mean_electron_rate*np.ones_like(mt)/self.RM.gain)
+        ax[1].errorbar(mt,self.mean_electron_rate*np.ones_like(mt)/self.RM.gain,yerr=self.stddev/self.RM.gain/dt)
+
+        for j,gi in enumerate(self.good_intervals):
+            if ~gi:
+                ax[1].axvline(mt[j],color='#bbbbbb',linestyle='--')
+            
+        ax[1].legend()
+        ax[1].set_xlabel('Time [s]')
+        ax[1].set_ylabel('Count rate')
+
+        ax[1].set_title('Differential counts')
+
+
+
         f.tight_layout()
 
 
