@@ -1,0 +1,194 @@
+nohup: ignoring input
+Loading input file
+Starting fit 0 of 10000
+Finished fit 0 of 10000
+Starting fit 200 of 10000
+Finished fit 200 of 10000
+Starting fit 400 of 10000
+Finished fit 400 of 10000
+Starting fit 600 of 10000
+Finished fit 600 of 10000
+Starting fit 800 of 10000
+Finished fit 800 of 10000
+Starting fit 1000 of 10000
+Finished fit 1000 of 10000
+Starting fit 1200 of 10000
+Finished fit 1200 of 10000
+Starting fit 1400 of 10000
+Finished fit 1400 of 10000
+Starting fit 1600 of 10000
+Finished fit 1600 of 10000
+Starting fit 1800 of 10000
+Finished fit 1800 of 10000
+Starting fit 2000 of 10000
+Finished fit 2000 of 10000
+Starting fit 2200 of 10000
+Finished fit 2200 of 10000
+Starting fit 2400 of 10000
+Finished fit 2400 of 10000
+Starting fit 2600 of 10000
+Finished fit 2600 of 10000
+Starting fit 2800 of 10000
+Finished fit 2800 of 10000
+Starting fit 3000 of 10000
+Finished fit 3000 of 10000
+Starting fit 3200 of 10000
+Finished fit 3200 of 10000
+Starting fit 3400 of 10000
+Finished fit 3400 of 10000
+Starting fit 3600 of 10000
+Finished fit 3600 of 10000
+Starting fit 3800 of 10000
+Finished fit 3800 of 10000
+Starting fit 4000 of 10000
+Finished fit 4000 of 10000
+Starting fit 4200 of 10000
+Finished fit 4200 of 10000
+Starting fit 4400 of 10000
+Finished fit 4400 of 10000
+Starting fit 4600 of 10000
+Finished fit 4600 of 10000
+Starting fit 4800 of 10000
+Finished fit 4800 of 10000
+Starting fit 5000 of 10000
+Finished fit 5000 of 10000
+Starting fit 5200 of 10000
+Finished fit 5200 of 10000
+Starting fit 5400 of 10000
+Finished fit 5400 of 10000
+Starting fit 5600 of 10000
+Finished fit 5600 of 10000
+Starting fit 5800 of 10000
+Finished fit 5800 of 10000
+Starting fit 6000 of 10000
+Finished fit 6000 of 10000
+Starting fit 6200 of 10000
+Finished fit 6200 of 10000
+Starting fit 6400 of 10000
+Finished fit 6400 of 10000
+Starting fit 6600 of 10000
+Finished fit 6600 of 10000
+Starting fit 6800 of 10000
+Finished fit 6800 of 10000
+Starting fit 7000 of 10000
+Finished fit 7000 of 10000
+Starting fit 7200 of 10000
+Finished fit 7200 of 10000
+Starting fit 7400 of 10000
+Finished fit 7400 of 10000
+Starting fit 7600 of 10000
+Finished fit 7600 of 10000
+Starting fit 7800 of 10000
+Finished fit 7800 of 10000
+Starting fit 8000 of 10000
+Finished fit 8000 of 10000
+Starting fit 8200 of 10000
+Finished fit 8200 of 10000
+Starting fit 8400 of 10000
+Finished fit 8400 of 10000
+Starting fit 8600 of 10000
+Finished fit 8600 of 10000
+Starting fit 8800 of 10000
+Finished fit 8800 of 10000
+Starting fit 9000 of 10000
+Finished fit 9000 of 10000
+Starting fit 9200 of 10000
+Finished fit 9200 of 10000
+Starting fit 9400 of 10000
+Finished fit 9400 of 10000
+Starting fit 9600 of 10000
+Finished fit 9600 of 10000
+Starting fit 9800 of 10000
+Finished fit 9800 of 10000
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+Elapsed time [minutes]: 1001.4329771359761
+Time per fit [s]: 6.008597862815857
