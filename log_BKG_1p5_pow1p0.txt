@@ -199,5 +199,5 @@ Starting fit 9800 of 10000
 Finished fit 9800 of 10000
 Starting fit 9900 of 10000
 Finished fit 9900 of 10000
-Elapsed time [minutes]: 300.48655363718666
-Time per fit [s]: 1.80291932182312
+Elapsed time [minutes]: 2177.9371097366015
+Time per fit [s]: 13.067622658419609

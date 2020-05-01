@@ -1,4 +1,3 @@
-nohup: ignoring input
 Loading input file
 Starting fit 0 of 10000
 Finished fit 0 of 10000
@@ -200,5 +199,5 @@ Starting fit 9800 of 10000
 Finished fit 9800 of 10000
 Starting fit 9900 of 10000
 Finished fit 9900 of 10000
-Elapsed time [minutes]: 451.7298397620519
-Time per fit [s]: 2.710379038572311
+Elapsed time [minutes]: 1317.7684692462285
+Time per fit [s]: 7.9066108154773715

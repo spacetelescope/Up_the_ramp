@@ -21,12 +21,12 @@ from scipy.interpolate import interp1d
 
 
 dirsave = '/user/gennaro/Functional_work/Up_the_ramp_myfork/Simulations_results/'
-testname = 'STEP200_NSAMP13_SNR10_round'
+testname = 'BKG_HeI_constant'
 
 outputs_file = dirsave+'Test_'+testname+'_out.pbz2'
 inputs_file  = dirsave+'Test_'+testname+'_in.pbz2'
 
-
+sys.stdout = open('log_'+testname+'.txt','w')
 
 # ### Setup the fitter method and options
 
@@ -37,9 +37,9 @@ fitpars = {'one_iteration_method':'Nelder-Mead'}
 
 # In[ ]:
 
-printevery = 200
-n_jobs     = 15
-chunksize  = 10 
+printevery = 100
+n_jobs     = 8
+chunksize  = 15 
 
 
 # ### Run the fitter on multiple ramps

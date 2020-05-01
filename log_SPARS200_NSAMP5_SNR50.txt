@@ -1,4 +1,3 @@
-nohup: ignoring input
 Loading input file
 Starting fit 0 of 10000
 Finished fit 0 of 10000
@@ -200,15 +199,5 @@ Starting fit 9800 of 10000
 Finished fit 9800 of 10000
 Starting fit 9900 of 10000
 Finished fit 9900 of 10000
-/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
-  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
-/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
-  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
-/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
-  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
-/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
-  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
-/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:122: RuntimeWarning: divide by zero encountered in log
-  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
-Elapsed time [minutes]: 30.216475669542948
-Time per fit [s]: 0.18129885401725768
+Elapsed time [minutes]: 119.50345154205958
+Time per fit [s]: 0.7170207092523575

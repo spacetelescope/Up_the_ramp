@@ -1,9 +1,4 @@
-nohup: ignoring input
 Loading input file
-/home/gennaro/anaconda3/lib/python3.5/site-packages/matplotlib/font_manager.py:273: UserWarning: Matplotlib is building the font cache using fc-list. This may take a moment.
-  warnings.warn('Matplotlib is building the font cache using fc-list. This may take a moment.')
-/home/gennaro/anaconda3/lib/python3.5/site-packages/matplotlib/font_manager.py:273: UserWarning: Matplotlib is building the font cache using fc-list. This may take a moment.
-  warnings.warn('Matplotlib is building the font cache using fc-list. This may take a moment.')
 Starting fit 0 of 10000
 Finished fit 0 of 10000
 Starting fit 100 of 10000
@@ -204,5 +199,5 @@ Starting fit 9800 of 10000
 Finished fit 9800 of 10000
 Starting fit 9900 of 10000
 Finished fit 9900 of 10000
-Elapsed time [minutes]: 344.528082382679
-Time per fit [s]: 2.067168494296074
+Elapsed time [minutes]: 1289.3277872641881
+Time per fit [s]: 7.735966723585129

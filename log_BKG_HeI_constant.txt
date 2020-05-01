@@ -37,9 +37,9 @@ Starting fit 1700 of 10000
 Finished fit 1700 of 10000
 Starting fit 1800 of 10000
 Finished fit 1800 of 10000
+Starting fit 2000 of 10000
 Starting fit 1900 of 10000
 Finished fit 1900 of 10000
-Starting fit 2000 of 10000
 Finished fit 2000 of 10000
 Starting fit 2100 of 10000
 Finished fit 2100 of 10000
@@ -199,5 +199,5 @@ Starting fit 9800 of 10000
 Finished fit 9800 of 10000
 Starting fit 9900 of 10000
 Finished fit 9900 of 10000
-Elapsed time [minutes]: 300.48655363718666
-Time per fit [s]: 1.80291932182312
+Elapsed time [minutes]: 770.2247432748477
+Time per fit [s]: 4.621348459649086

@@ -55,6 +55,9 @@ class IterativeFitter(object):
         electron_rates = (self.x_hat[1:]-self.x_hat[:-1])/self.dt[1:]
         self.mean_electron_rate = np.median(electron_rates)   #set initially to median to avoid problems with CR in case of few reads
 
+        if self.mean_electron_rate < (self.RM.gain /self.RM.RTS.group_times[-1]):
+            self.mean_electron_rate = 0.5
+
         self.x_new = np.copy(self.x_hat)
         
 
@@ -119,8 +122,9 @@ class IterativeFitter(object):
             else:
                 keep_grps[i] = False
                     
-        return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps]) + np.sum(np.log(poisson_pmf[1:])[self.good_intervals]) )
-
+        return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps])
+                    + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+                    )
 
     def one_iteration(self,conv_attempts = 5):
 
@@ -160,6 +164,7 @@ class IterativeFitter(object):
                 If the minimizer did not converge, restart from slightly different initial conditions
                 '''
                 self.x_hat = self.x_new + np.random.normal(scale=self.RM.RON_e,size=self.x_hat.size)
+#                self.x_hat = self.x_new + np.random.normal(scale=self.mean_electron_rate,size=self.x_hat.size)
                 for i in range(1,self.x_hat.size):
                     if self.x_hat[i] < self.x_hat[i-1]:
                         self.x_hat[i] = self.x_hat[i-1]
@@ -169,6 +174,7 @@ class IterativeFitter(object):
                 if attempts >= conv_attempts:
                     success = True
                     self.x_new = np.round(self.minimize_res['x']) + np.random.normal(scale=self.RM.RON_e,size=self.x_new.size)
+#                    self.x_new = np.round(self.minimize_res['x']) + np.random.normal(scale=self.mean_electron_rate,size=self.x_new.size)
                     for i in range(1,self.x_new.size):
                         if self.x_new[i] < self.x_new[i-1]:
                             self.x_new[i] = self.x_new[i-1]
@@ -182,6 +188,9 @@ class IterativeFitter(object):
         invcovmat_h = np.linalg.inv(covmat_h)
         self.sigmasq_h   = 1./np.sum(invcovmat_h)
         self.mean_electron_rate = self.sigmasq_h*np.sum(np.matmul(invcovmat_h,electron_rates[self.good_intervals])) 
+        if self.mean_electron_rate < (self.RM.gain /self.RM.RTS.group_times[-1]):
+            self.mean_electron_rate = 0.5
+            
 #        print(self.good_intervals)
 #        print(self.sigmasq_h)
 #        print(self.mean_electron_rate)
@@ -228,7 +237,7 @@ class IterativeFitter(object):
         deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
         self.good_intervals = np.fabs( deltas/self.stddev) < CRthr
 
-        self.covmat = np.diag(np.square(self.stddev/self.dt[1:]))
+        self.covmat = np.diag(self.var_signal_per_diff/np.square(self.dt[1:]))
         for k in range(self.RM.RTS.ngroups-2):
             self.covmat[k,k+1] = self.covmat[k+1,k] =  (self.mean_electron_rate * self.RM.RTS.group_times[k+1] * (1.-1./self.RM.RTS.nframes)
                                                         -2*self.mean_electron_rate/np.square(self.RM.RTS.nframes)*self.RM.RTS.lower_triangle_sum[k+1]
@@ -271,7 +280,7 @@ class IterativeFitter(object):
             self.stddev = np.sqrt(self.var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
             deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
             new_good_intervals = np.fabs(deltas/self.stddev) < CRthr
-            self.covmat = np.diag(np.square(self.stddev/self.dt[1:]))
+            self.covmat = np.diag(self.var_signal_per_diff/np.square(self.dt[1:]))
             for k in range(self.RM.RTS.ngroups-2):
                 self.covmat[k,k+1] = self.covmat[k+1,k] =  (self.mean_electron_rate * self.RM.RTS.group_times[k+1] * (1.-1./self.RM.RTS.nframes)
                                                             -2*self.mean_electron_rate/np.square(self.RM.RTS.nframes)*self.RM.RTS.lower_triangle_sum[k+1]
@@ -287,6 +296,9 @@ class IterativeFitter(object):
                 invcovmat_h = np.linalg.inv(covmat_h)
                 self.sigmasq_h   = 1./np.sum(invcovmat_h)
                 self.mean_electron_rate = self.sigmasq_h*np.sum(np.matmul(invcovmat_h,electron_rates[self.good_intervals])) 
+                if self.mean_electron_rate < (self.RM.gain /self.RM.RTS.group_times[-1]):
+                    self.mean_electron_rate = 0.5
+
                 
             if (self.crloops_counter > maxCRiter):
                 self.error = 3
@@ -345,7 +357,7 @@ class IterativeFitter(object):
                 var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
                                        + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
                                        + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
-                                       ) * self.mean_electron_rate
+                                       ) * self.mean_electron_ratec
             
                 variance = var_signal_per_diff[self.good_intervals]+self.var_RON_per_diff+self.var_quant_per_diff
                 variance = variance / np.square(self.RM.gain)
@@ -376,7 +388,7 @@ class IterativeFitter(object):
 #            x0 = self.dt[1:][self.good_intervals]
 #            H_p1 = 1/np.matmul(x0,np.matmul(invcovmat,x0))
 #            H_p2 = np.matmul(x0,invcovmat)
-#            H    = np.outer(x0,H_p1*H_p2)
+#            H    = np.outer(x0,H_p1*H_p2)covma
 #            I    = np.diag(np.ones(H.shape[0]))
 #            M1 = I-H
 #            M2 = M1.T
