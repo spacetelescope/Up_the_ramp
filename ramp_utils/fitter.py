@@ -528,30 +528,49 @@ class IterativeFitter(object):
         '''
         Method to plot the fit results
         '''
+        
+        plt.style.use('bmh')
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['font.size'] = 17
+        plt.rcParams['axes.labelsize'] = 17
+        plt.rcParams['axes.labelweight'] = 'normal'
+        plt.rcParams['xtick.labelsize'] = 15
+        plt.rcParams['ytick.labelsize'] = 15
+        plt.rcParams['legend.fontsize'] = 10
+        plt.rcParams['figure.titlesize'] = 18
+        plt.rcParams['axes.titlesize'] = 17
+        
+        
         f,ax = plt.subplots(1,3,figsize=(15,4),sharex='row')
         ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts,label='Noisy Counts',s=100,marker='*')
         ax[0].scatter(self.RM.RTS.group_times,self.z_new/self.RM.gain,label='Convergence counts',s=25)
         ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-self.RM.RON_effective/self.RM.gain,label='Noiseless Counts + \n Bias + KTC + CRs',s=25)
-        ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-(self.RM.RON_effective-np.mean(self.RM.RON_effective))/self.RM.gain,label='Noiseless Counts + \n Bias + KTC +\n mean RON',s=25)
+        #ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-(self.RM.RON_effective-np.mean(self.RM.RON_effective))/self.RM.gain,label='Noiseless Counts + \n Bias + KTC +\n mean RON',s=25)
         
         ax[0].plot(self.RM.RTS.group_times,(self.z_new[0]+self.mean_electron_rate*(self.RM.RTS.group_times-self.RM.RTS.group_times[0]))/self.RM.gain)
 
         for j,gi in enumerate(self.good_intervals):
             if ~gi:
-                ax[0].axvline(0.5*(self.RM.RTS.group_times[j]+self.RM.RTS.group_times[j+1]),color='#bbbbbb',linestyle='--')
+                if j == 0:
+                    ax[0].axvline(0.5*(self.RM.RTS.group_times[j]+self.RM.RTS.group_times[j+1]),color='#bbbbbb',linestyle='--',label='CR hits')
+                else:
+                    ax[0].axvline(0.5*(self.RM.RTS.group_times[j]+self.RM.RTS.group_times[j+1]),color='#bbbbbb',linestyle='--')
             
-        ax[0].legend()
         ax[0].set_xlabel('Time [s]')
         ax[0].set_ylabel('Counts')
-        ax[0].set_title('Cumulative counts')
+        ax[0].set_title('Cumulative counts',fontsize=17)
 
         mt = 0.5*(self.RM.RTS.group_times[1:]+self.RM.RTS.group_times[:-1])
         dt = self.RM.RTS.group_times[1:]-self.RM.RTS.group_times[:-1]
 
         y = self.RM.noisy_counts
         y = (y[1:]-y[:-1])/dt
+        
+        w = 1./np.square(self.stddev/self.RM.gain/dt)
+        
         ax[1].scatter(mt,y,label='Noisy Counts',s=100,marker='*')
-        ax[1].axhline(np.mean(y[self.good_intervals]),linestyle='--')
+        ax[1].axhline(np.average(y[self.good_intervals],weights=w[self.good_intervals]),linestyle='--',label='Observed count rate')
+        ax[1].axhline(self.RM.flux/self.RM.gain,linestyle=':',label='True count rate')
         
         y = self.z_new/self.RM.gain
         y = (y[1:]-y[:-1])/dt
@@ -563,16 +582,18 @@ class IterativeFitter(object):
         
         y = self.RM.noisy_counts-(self.RM.RON_effective-np.mean(self.RM.RON_effective))/self.RM.gain
         y = (y[1:]-y[:-1])/dt        
-        ax[1].scatter(mt,y,label='Noiseless Counts + \n Bias + KTC +\n mean RON',s=25)
+        #ax[1].scatter(mt,y,label='Noiseless Counts + \n Bias + KTC +\n mean RON',s=25)
         
         ax[1].plot(mt,self.mean_electron_rate*np.ones_like(mt)/self.RM.gain)
-        ax[1].errorbar(mt,self.mean_electron_rate*np.ones_like(mt)/self.RM.gain,yerr=self.stddev/self.RM.gain/dt)
+        ax[1].errorbar(mt,self.mean_electron_rate*np.ones_like(mt)/self.RM.gain,yerr=self.stddev/self.RM.gain/dt,label='Measured count rate')
 
         for j,gi in enumerate(self.good_intervals):
             if ~gi:
-                ax[1].axvline(mt[j],color='#bbbbbb',linestyle='--')
+                if j == 0:
+                    ax[1].axvline(mt[j],color='#bbbbbb',linestyle='--',label='CR hits')
+                else:
+                    ax[1].axvline(mt[j],color='#bbbbbb',linestyle='--')
             
-        ax[1].legend()
         ax[1].set_xlabel('Time [s]')
         ax[1].set_ylabel('Count rate')
 
@@ -588,10 +609,14 @@ class IterativeFitter(object):
         ax[2].scatter(self.RM.RTS.read_times[self.RM.RTS.kept_reads],self.x_new/self.RM.gain-sub2,label='Convergence counts  - per frame',s=25)
         
             
-        ax[2].legend()
         ax[2].set_xlabel('Time [s]')
         ax[2].set_ylabel('Counts')
         ax[2].set_title('Counts minus solution')
+
+        for axx,nc in zip(ax,[1,2,1]):
+            axx.legend(ncol=nc)
+            axx.set_facecolor('#FFFFFF')
+
 
         f.tight_layout()
 

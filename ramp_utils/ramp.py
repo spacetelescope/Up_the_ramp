@@ -124,6 +124,18 @@ class RampTimeSeq(object):
         '''
         Method to plot the read sequence
         '''
+        
+        plt.style.use('bmh')
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['font.size'] = 17
+        plt.rcParams['axes.labelsize'] = 17
+        plt.rcParams['axes.labelweight'] = 'normal'
+        plt.rcParams['xtick.labelsize'] = 15
+        plt.rcParams['ytick.labelsize'] = 15
+        plt.rcParams['legend.fontsize'] = 10
+        plt.rcParams['figure.titlesize'] = 18
+        plt.rcParams['axes.titlesize'] = 17
+
         f,ax = plt.subplots(1,1,figsize=(10,4))
         ax.scatter(self.read_times[self.kept_reads],np.ones_like(self.read_times[self.kept_reads]),c='b',s=4,label='Individual frames read times')
         ax.scatter(self.read_times[~self.kept_reads],np.ones_like(self.read_times[~self.kept_reads]), c='r',s=4,label='Individual skipped frames times')
@@ -131,6 +143,8 @@ class RampTimeSeq(object):
         ax.set_xlabel('Time [s]')
         ax.set_ylim(0.8,1.3)
         ax.legend()
+        ax.set_facecolor('#FFFFFF')
+        
         f.tight_layout()
 
 
@@ -378,9 +392,20 @@ class RampMeasurement(object):
         Method to plot the simulated counts
         '''
 
-        f,ax = plt.subplots(3,1,figsize=(10,10),sharex='col')
+        plt.style.use('bmh')
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['font.size'] = 17
+        plt.rcParams['axes.labelsize'] = 17
+        plt.rcParams['axes.labelweight'] = 'normal'
+        plt.rcParams['xtick.labelsize'] = 15
+        plt.rcParams['ytick.labelsize'] = 15
+        plt.rcParams['legend.fontsize'] = 10
+        plt.rcParams['figure.titlesize'] = 18
+        plt.rcParams['axes.titlesize'] = 17
+
+        f,ax = plt.subplots(3,1,figsize=(8,12),sharex='col')
         ax[0].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noiseless_counts_reads[self.RTS.kept_reads],label='Noiseless Counts',s=15)
-        ax[0].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noiseless_counts_reads[~self.RTS.kept_reads],label=None,s=1)
+        ax[0].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noiseless_counts_reads[~self.RTS.kept_reads],label=None,s=3)
                 
         if self.RTS.nframes > 1:
             ax[0].scatter(self.RTS.group_times,self.noiseless_counts,label='Noiseless Counts -- gr. avg.',marker='x',s=100)
@@ -389,13 +414,13 @@ class RampMeasurement(object):
         ax[1].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noiseless_counts_reads[self.RTS.kept_reads]+self.cum_CR_counts_reads[self.RTS.kept_reads]+self.bias_adu+self.KTC_actual/self.gain,
                       label='Noiseless Counts + \n Bias + KTC + CRs',s=15)
         ax[1].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noiseless_counts_reads[~self.RTS.kept_reads]+self.cum_CR_counts_reads[~self.RTS.kept_reads]+self.bias_adu+self.KTC_actual/self.gain,
-                      label=None,s=1)
+                      label=None,s=3)
         if self.RTS.nframes > 1:
             ax[1].scatter(self.RTS.group_times,self.noiseless_counts+self.cum_CR_counts+self.bias_adu+self.KTC_actual/self.gain,
                           label='Noiseless Counts + \n Bias + KTC -- gr. avg.',s=100,marker='x')
 
         ax[1].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noisy_counts_reads[self.RTS.kept_reads],label='Noisy Counts',s=15)
-        ax[1].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noisy_counts_reads[~self.RTS.kept_reads],label=None,s=1)
+        ax[1].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noisy_counts_reads[~self.RTS.kept_reads],label=None,s=3)
         if self.RTS.nframes > 1:
             ax[1].scatter(self.RTS.group_times,self.noisy_counts,label='Noisy Counts -- gr. avg.',s=100,marker='x')
         ax[1].legend()
@@ -412,12 +437,15 @@ class RampMeasurement(object):
             ax[1].set_ylim(ydw-1.1*cmax,yup)
                 
         ax[2].scatter(self.RTS.read_times[self.RTS.kept_reads],self.RON_actual_reads[self.RTS.kept_reads]/self.gain,label='RON (counts)',s=15)
-        ax[2].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.RON_actual_reads[~self.RTS.kept_reads]/self.gain,label=None,s=1)
+        ax[2].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.RON_actual_reads[~self.RTS.kept_reads]/self.gain,label=None,s=3)
         if self.RTS.nframes > 1:
             ax[2].scatter(self.RTS.group_times,self.RON_effective/self.gain,label='RON (counts) -- gr.avg.',s=100,marker='x')
         ax[2].set_xlabel('Time [s]')
         ax[2].set_ylim(-3*self.RON_adu,3*self.RON_adu)
         ax[2].legend()
+
+        for axx in ax:
+            axx.set_facecolor('#FFFFFF')
 
         f.tight_layout()
 
