@@ -21,7 +21,7 @@ from scipy.interpolate import interp1d
 
 
 dirsave = '/user/gennaro/Functional_work/Up_the_ramp_myfork/Simulations_results/'
-testname = 'BKG_HeI_constant'
+testname = 'R14_JWSTcorr'
 
 outputs_file = dirsave+'Test_'+testname+'_out.pbz2'
 inputs_file  = dirsave+'Test_'+testname+'_in.pbz2'
@@ -38,7 +38,7 @@ fitpars = {'one_iteration_method':'Nelder-Mead'}
 # In[ ]:
 
 printevery = 100
-n_jobs     = 8
+n_jobs     = 16
 chunksize  = 15 
 
 

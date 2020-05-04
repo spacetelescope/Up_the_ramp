@@ -28,37 +28,54 @@ class IterativeFitter(object):
 
 
         '''
-        Initialize the dt array (differences between the group times)
+        Initialize the dt_groups array (differences between the group times)
         Also inizialize an array that contains the covariance error term for the count differences within an interval. This is the sum
         of two lower-traingular matrices sum (derived from the second term in eq(4) of Roberto (2010) JWST-STScI-002161)
         '''
         
-        self.dt    = np.zeros_like(self.RM.noisy_counts,dtype=np.float_)
-        self.triangle_sums = np.zeros_like(self.RM.noisy_counts,dtype=np.float_)
-        for i in range(1,self.dt.size):
-            self.dt[i] = self.RM.RTS.group_times[i] - self.RM.RTS.group_times[i-1] 
+        self.dt_groups    = np.zeros(self.RM.RTS.ngroups,dtype=np.float_)
+        self.triangle_sums = np.zeros(self.RM.RTS.ngroups,dtype=np.float_)
+        for i in range(1,self.RM.RTS.ngroups):
+            self.dt_groups[i] = self.RM.RTS.group_times[i] - self.RM.RTS.group_times[i-1] 
             self.triangle_sums[i] = self.RM.RTS.lower_triangle_sum[i] + self.RM.RTS.lower_triangle_sum[i-1]
+
+        '''
+        Initialize the dt_frames (difference between individual frames times) with shape ngroups x nframes
+        '''
+        
+        self.dt_frames = np.zeros(self.RM.RTS.ngroups*self.RM.RTS.nframes,dtype=np.float_)
+
+        for i in range(self.RM.RTS.ngroups):
+            start = i*(self.RM.RTS.nframes+self.RM.RTS.nskips)
+            end   = i*(self.RM.RTS.nframes+self.RM.RTS.nskips)+self.RM.RTS.nframes
+            tt = self.RM.RTS.read_times[start:end]
+            self.dt_frames[i*self.RM.RTS.nframes+1:(i+1)*self.RM.RTS.nframes] = tt[1:]-tt[:-1]
+            if i >0:
+                self.dt_frames[i*self.RM.RTS.nframes] = self.RM.RTS.read_times[start]-self.RM.RTS.read_times[start-self.RM.RTS.nskips-1]
             
         '''
         Initialize the "hat" values. These are the latent poisson variables "actual number of electrons deposited in each interval"
         The _new values are the auxiliary variables used to iterate over the _hat ones
+        The x's are the values for the individual frames, the z's are the values for the avergaed groups
         '''
         
-        self.x_hat = np.floor(self.RM.noisy_counts*self.RM.gain)
+        self.x_hat = np.repeat(np.floor(self.RM.noisy_counts*self.RM.gain),self.RM.RTS.nframes)
         
         for i in range(1,self.x_hat.size):
             if self.x_hat[i] < self.x_hat[i-1]:
                 self.x_hat[i] = self.x_hat[i-1]
 
         self.x_hat = self.x_hat+np.mean(self.RM.noisy_counts*self.RM.gain)-np.mean(self.x_hat)
+        self.z_hat = np.mean(self.x_hat.reshape(-1, self.RM.RTS.nframes), axis=1)
 
-        electron_rates = (self.x_hat[1:]-self.x_hat[:-1])/self.dt[1:]
+        electron_rates = (self.z_hat[1:]-self.z_hat[:-1])/self.dt_groups[1:]
         self.mean_electron_rate = np.median(electron_rates)   #set initially to median to avoid problems with CR in case of few reads
 
         if self.mean_electron_rate < (self.RM.gain /self.RM.RTS.group_times[-1]):
             self.mean_electron_rate = 0.5
 
         self.x_new = np.copy(self.x_hat)
+        self.z_new = np.copy(self.z_hat)
         
 
 
@@ -68,10 +85,12 @@ class IterativeFitter(object):
         '''
 
         self.normal_distr = []
-        self.poisson_distr = []
         for i in range(self.RM.RTS.ngroups):
-            self.normal_distr.append(norm(loc=(self.RM.noisy_counts[i]*self.RM.gain),scale=self.RM.RON_e))
-            self.poisson_distr.append(poisson(mu=self.mean_electron_rate*self.dt[i]))
+            self.normal_distr.append(norm(loc=(self.RM.noisy_counts[i]*self.RM.gain),scale=self.RM.RON_e/np.sqrt(self.RM.RTS.nframes)))
+        
+        self.poisson_distr = []
+        for i in range(self.RM.RTS.nframes*self.RM.RTS.ngroups):
+            self.poisson_distr.append(poisson(mu=self.mean_electron_rate*self.dt_frames[i]))
 
         '''
         Initialize a couple of auxiliary variables needed to compute the noise for each count difference
@@ -90,22 +109,24 @@ class IterativeFitter(object):
 
         '''
 
-        #xr = np.round(x).astype(np.int_) #Mario: rounded version
         
-        poisson_pmf  = np.empty_like(x)
-        gaussian_pdf = np.empty_like(x)
+        poisson_pmf  = np.empty(self.RM.RTS.nframes*self.RM.RTS.ngroups,dtype=np.float_)
+        gaussian_pdf = np.empty(self.RM.RTS.ngroups,dtype=np.float_)
         
-        for i in range(self.RM.RTS.ngroups):
+        for i in range(self.RM.RTS.nframes*self.RM.RTS.ngroups):
             if i == 0:
                 poisson_pmf[i] = 1.
             else:
-                if x[i] < x[i-1]:  #Mario: rounded version
+                if x[i] < x[i-1]:  
                     return np.inf
                 else:
-                    poisson_pmf[i]  = self.poisson_distr[i].pmf(np.round(x[i]-x[i-1]).astype(np.int_)) #Mario: rounded version
-            gaussian_pdf[i] = self.normal_distr[i].pdf(x[i]) #Mario: rounded version
+                    poisson_pmf[i]  = self.poisson_distr[i].pmf(np.round(x[i]-x[i-1]).astype(np.int_))
+            
+        z = np.mean(x.reshape(-1, self.RM.RTS.nframes), axis=1)
+        for  i in range(self.RM.RTS.ngroups):
+            gaussian_pdf[i] = self.normal_distr[i].pdf(z[i]) 
  
-        keep_grps = np.empty_like(x,dtype=np.bool_) #Mario: rounded version
+        keep_grps = np.empty(self.RM.RTS.ngroups,dtype=np.bool_) 
         for i in range(self.RM.RTS.ngroups):
             if i == 0:
                 intdw = i
@@ -121,9 +142,12 @@ class IterativeFitter(object):
                 keep_grps[i] = True
             else:
                 keep_grps[i] = False
-                    
+        
+        keep_frames = np.ones(self.RM.RTS.nframes*self.RM.RTS.ngroups,dtype=np.bool_)
+        keep_frames[self.RM.RTS.nframes:] = np.repeat(self.good_intervals,self.RM.RTS.nframes)           
+        
         return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps])
-                    + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+                    + np.sum(np.log(poisson_pmf)[keep_frames])
                     )
 
     def one_iteration(self,conv_attempts = 5):
@@ -157,14 +181,13 @@ class IterativeFitter(object):
             
             success = self.minimize_res['success']
             if success == True:
-                self.x_new = np.copy(self.minimize_res['x'])  #Mario: rounded version
+                self.x_new = np.copy(self.minimize_res['x'])
                 self.x_hat = np.copy(self.x_new)
             else:
                 '''
                 If the minimizer did not converge, restart from slightly different initial conditions
                 '''
                 self.x_hat = self.x_new + np.random.normal(scale=self.RM.RON_e,size=self.x_hat.size)
-#                self.x_hat = self.x_new + np.random.normal(scale=self.mean_electron_rate,size=self.x_hat.size)
                 for i in range(1,self.x_hat.size):
                     if self.x_hat[i] < self.x_hat[i-1]:
                         self.x_hat[i] = self.x_hat[i-1]
@@ -181,9 +204,11 @@ class IterativeFitter(object):
                     self.x_new = self.x_new + np.mean(self.RM.noisy_counts*self.RM.gain) - np.mean(self.x_new)
                     self.x_hat = np.copy(self.x_new)
         
-        electron_rates = (self.x_new[1:]-self.x_new[:-1])/self.dt[1:]
         
-#        print(electron_rates)
+        self.z_new = np.mean(self.x_new.reshape(-1, self.RM.RTS.nframes), axis=1)
+        self.z_hat = np.copy(self.z_new)
+        electron_rates = (self.z_new[1:]-self.z_new[:-1])/self.dt_groups[1:]
+        
         covmat_h    = self.covmat[np.ix_(self.good_intervals,self.good_intervals)]
         invcovmat_h = np.linalg.inv(covmat_h)
         self.sigmasq_h   = 1./np.sum(invcovmat_h)
@@ -191,16 +216,13 @@ class IterativeFitter(object):
         if self.mean_electron_rate < (self.RM.gain /self.RM.RTS.group_times[-1]):
             self.mean_electron_rate = 0.5
             
-#        print(self.good_intervals)
-#        print(self.sigmasq_h)
-#        print(self.mean_electron_rate)
         sys.stdout.flush()
 
-        for i in range(self.RM.RTS.ngroups):
-            self.poisson_distr[i] = poisson(mu=self.mean_electron_rate*self.dt[i])
+        for i in range(self.RM.RTS.nframes*self.RM.RTS.ngroups):
+            self.poisson_distr[i] = poisson(mu=self.mean_electron_rate*self.dt_frames[i])
 
 
-    def perform_fit(self,thr=None,maxCRiter=10,maxiter=20,CRthr=4.):
+    def perform_fit(self,thr=None,maxCRiter=10,maxiter=50,CRthr=4.):
 
         '''
         Wrapper function to perform the up-the-ramp fit, test for cosmic rays, check convergence, issue error status
@@ -234,14 +256,14 @@ class IterativeFitter(object):
                                     + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
                                     ) * self.mean_electron_rate
         self.stddev = np.sqrt(self.var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
-        deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
+        deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt_groups[1:]
         self.good_intervals = np.fabs( deltas/self.stddev) < CRthr
 
-        self.covmat = np.diag(self.var_signal_per_diff/np.square(self.dt[1:]))
+        self.covmat = np.diag(self.var_signal_per_diff/np.square(self.dt_groups[1:]))
         for k in range(self.RM.RTS.ngroups-2):
             self.covmat[k,k+1] = self.covmat[k+1,k] =  (self.mean_electron_rate * self.RM.RTS.group_times[k+1] * (1.-1./self.RM.RTS.nframes)
                                                         -2*self.mean_electron_rate/np.square(self.RM.RTS.nframes)*self.RM.RTS.lower_triangle_sum[k+1]
-                                                        )/self.dt[k+1]/self.dt[k+2]
+                                                        )/self.dt_groups[k+1]/self.dt_groups[k+2]
 
 
         check_CRs  = 1
@@ -251,12 +273,12 @@ class IterativeFitter(object):
             self.crloops_counter = self.crloops_counter + 1
 
             if (np.any(self.good_intervals) ==  True):
-                check_conv = 1
-                self.counter    = 0
-                self.error      = 0
+                check_conv    = 1
+                self.counter  = 0
+                self.error    = 0
             else:
-                self.counter    = 0
-                self.error      = 2
+                self.counter  = 0
+                self.error    = 2
                 return self.error, self.counter, self.good_intervals, self.crloops_counter
 
             while check_conv:
@@ -278,19 +300,19 @@ class IterativeFitter(object):
                             + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
                             ) * self.mean_electron_rate
             self.stddev = np.sqrt(self.var_signal_per_diff+self.var_RON_per_diff+self.var_quant_per_diff)
-            deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt[1:]
+            deltas  = self.RM.gain*(self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1]) - self.mean_electron_rate*self.dt_groups[1:]
             new_good_intervals = np.fabs(deltas/self.stddev) < CRthr
-            self.covmat = np.diag(self.var_signal_per_diff/np.square(self.dt[1:]))
+            self.covmat = np.diag(self.var_signal_per_diff/np.square(self.dt_groups[1:]))
             for k in range(self.RM.RTS.ngroups-2):
                 self.covmat[k,k+1] = self.covmat[k+1,k] =  (self.mean_electron_rate * self.RM.RTS.group_times[k+1] * (1.-1./self.RM.RTS.nframes)
                                                             -2*self.mean_electron_rate/np.square(self.RM.RTS.nframes)*self.RM.RTS.lower_triangle_sum[k+1]
-                                                            )/self.dt[k+1]/self.dt[k+2]
+                                                            )/self.dt_groups[k+1]/self.dt_groups[k+2]
 
             if np.array_equal(self.good_intervals,new_good_intervals):
                 check_CRs = 0
             else: 
                 self.good_intervals = new_good_intervals
-                electron_rates = (self.x_new[1:]-self.x_new[:-1])/self.dt[1:]
+                electron_rates = (self.z_new[1:]-self.z_new[:-1])/self.dt_groups[1:]
                 
                 covmat_h    = self.covmat[np.ix_(self.good_intervals,self.good_intervals)]
                 invcovmat_h = np.linalg.inv(covmat_h)
@@ -341,7 +363,7 @@ class IterativeFitter(object):
 
         else:
             f_obs = (self.RM.noisy_counts[1:]-self.RM.noisy_counts[:-1])[self.good_intervals]
-            f_exp = (self.mean_electron_rate * self.dt[1:]/self.RM.gain)[self.good_intervals]
+            f_exp = (self.mean_electron_rate * self.dt_groups[1:]/self.RM.gain)[self.good_intervals]
 
             if mode == 'G-test':
                 ddof  = 1
@@ -357,7 +379,7 @@ class IterativeFitter(object):
                 var_signal_per_diff = (self.RM.RTS.group_times[1:]/self.RM.RTS.nframes
                                        + self.RM.RTS.group_times[:-1]*(1./self.RM.RTS.nframes -2)
                                        + 2./np.square(self.RM.RTS.nframes)*self.triangle_sums[1:]
-                                       ) * self.mean_electron_ratec
+                                       ) * self.mean_electron_rate
             
                 variance = var_signal_per_diff[self.good_intervals]+self.var_RON_per_diff+self.var_quant_per_diff
                 variance = variance / np.square(self.RM.gain)
@@ -398,15 +420,19 @@ class IterativeFitter(object):
             
             elif mode == 'poisson-likelihood':
 
-                poisson_lpmf = np.empty_like(self.dt,dtype=np.float_)
+                poisson_distr_groups = []
+                for i in range(self.RM.RTS.ngroups):
+                    poisson_distr_groups.append(poisson(mu=self.mean_electron_rate*self.dt_groups[i]))
+
+                poisson_lpmf = np.empty(self.RM.RTS.ngroups,dtype=np.float_)
                 for i in range(self.RM.RTS.ngroups):
                     if i == 0:
                         poisson_lpmf[i] = 0.
                     else:
-                        if self.x_new[i] < self.x_new[i-1]:
+                        if self.z_new[i] < self.z_new[i-1]:
                             poisson_lpmf[i] = np.inf
                         else:
-                            poisson_lpmf[i] = self.poisson_distr[i].logpmf(self.x_new[i]-self.x_new[i-1])
+                            poisson_lpmf[i] = poisson_distr_groups[i].logpmf(np.round(self.z_new[i]-self.z_new[i-1]))
             
                 g = np.sum(poisson_lpmf[1:][self.good_intervals])
                 ncompare = 10000
@@ -414,55 +440,79 @@ class IterativeFitter(object):
              
                 i = 0
                 for k in np.nonzero(self.good_intervals)[0]:
-                    rv = self.poisson_distr[k+1].rvs(size=ncompare)
-                    lpmfs[:,i] = self.poisson_distr[k+1].logpmf(rv) 
+                    rv = poisson_distr_groups[k+1].rvs(size=ncompare)
+                    lpmfs[:,i] = poisson_distr_groups[k+1].logpmf(rv) 
                     i = i+1
              
                 loglik_compare = np.sum(lpmfs,axis=1)
                 BM = g > loglik_compare
                 p = np.sum(BM).astype(np.float_)/ncompare
 
+
             elif mode == 'full-likelihood':
 
-                poisson_lpmf = np.empty_like(self.dt,dtype=np.float_)
-                gaussian_lpdf = np.empty_like(self.dt,dtype=np.float_)
+                poisson_lpmf  = np.empty(self.RM.RTS.ngroups,dtype=np.float_)
+                gaussian_lpdf = np.empty(self.RM.RTS.ngroups,dtype=np.float_) 
+
+                poisson_distr_groups = []
+                gauss_distr_groups = []
+                
+                for i in range(self.RM.RTS.ngroups):
+                    poisson_distr_groups.append(poisson(mu=self.mean_electron_rate*self.dt_groups[i]))
+                    gauss_distr_groups.append(norm(loc=self.RM.gain*(self.RM.noisy_counts[i]-self.RM.noisy_counts[i-1]),
+                                           scale=np.sqrt(2./self.RM.RTS.nframes)*self.RM.RON_e))
+
 
                 for i in range(self.RM.RTS.ngroups):
                     if i == 0:
                         poisson_lpmf[i] = 0.
-                        gaussian_lpdf[i] = 0.
                     else:
-                        if self.x_new[i] < self.x_new[i-1]:
+                        if self.z_new[i] < self.z_new[i-1]:
                             poisson_lpmf[i] = -np.inf
-                            gaussian_lpdf[i] = -np.inf
-                           
                         else:
-                            poisson_lpmf[i] = self.poisson_distr[i].logpmf(np.round(self.x_new[i]-self.x_new[i-1])) #Mario:rounded version
-                            gauss_distr = norm(loc=self.RM.gain*(self.RM.noisy_counts[i]-self.RM.noisy_counts[i-1]),
-                                           scale=np.sqrt(2)*self.RM.RON_e)
-                            gaussian_lpdf[i] = gauss_distr.logpdf(self.x_new[i]-self.x_new[i-1])
+                            poisson_lpmf[i] = poisson_distr_groups[i].logpmf(np.round(self.z_new[i]-self.z_new[i-1])) 
+
+                    gaussian_lpdf[i] = gauss_distr_groups[i].logpdf(self.z_new[i]-self.z_new[i-1])
 
 
-                g = np.sum((poisson_lpmf+gaussian_lpdf)[1:][self.good_intervals])
+                keep_grps = np.empty(self.RM.RTS.ngroups,dtype=np.bool_) 
+                for i in range(self.RM.RTS.ngroups):
+                    if i == 0:
+                        intdw = i
+                        intup = i
+                    elif i == (self.RM.RTS.ngroups-1):
+                        intdw = i-1
+                        intup = i-1
+                    else:
+                        intdw = i-1
+                        intup = i
+                        
+                    if ((self.good_intervals[intdw] == True) | (self.good_intervals[intup] == True)):
+                        keep_grps[i] = True
+                    else:
+                        keep_grps[i] = False
+                
+
+
+                g = np.sum(poisson_lpmf[1:][self.good_intervals])+np.sum(gaussian_lpdf[keep_grps])
                 ncompare = 10000
-                llkls = np.empty([ncompare,np.sum(self.good_intervals)])
+                pllkls = np.empty([ncompare,np.sum(self.good_intervals)])
+                gllkls = np.empty([ncompare,np.sum(keep_grps)])
 
                 i = 0
-                nh = norm(loc=0.,scale=np.sqrt(2)*self.RM.RON_e)
-#                print(self.good_intervals)
-#                print(self.error)
-#                print(self.mean_electron_rate)
-#                print(self.dt[i])
-#                sys.stdout.flush()
+                nh = norm(loc=0.,scale=np.sqrt(2./self.RM.RTS.nframes)*self.RM.RON_e)
+                for k in np.nonzero(keep_grps)[0]:
+                    noise = nh.rvs(size=ncompare)                
+                    gllkls[:,i] = nh.logpdf(noise)
+                    i = i+1
+                i = 0 
                 for k in np.nonzero(self.good_intervals)[0]:
-#                    print('k',k)
-                    sys.stdout.flush()
-                    rv = self.poisson_distr[k+1].rvs(size=ncompare)
-                    noise= nh.rvs(size=ncompare)                
-                    llkls[:,i] = self.poisson_distr[k+1].logpmf(rv) + nh.logpdf(noise)
+                    rv = poisson_distr_groups[k+1].rvs(size=ncompare)
+                    pllkls[:,i] = poisson_distr_groups[k+1].logpmf(rv) 
                     i = i+1
 
-                loglik_compare = np.sum(llkls,axis=1)
+
+                loglik_compare = np.sum(pllkls,axis=1) + np.sum(gllkls,axis=1)
                 BM = g > loglik_compare
                 p = np.sum(BM).astype(np.float_)/ncompare
 
@@ -478,13 +528,13 @@ class IterativeFitter(object):
         '''
         Method to plot the fit results
         '''
-        f,ax = plt.subplots(1,2,figsize=(12,4),sharex='row')
+        f,ax = plt.subplots(1,3,figsize=(15,4),sharex='row')
         ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts,label='Noisy Counts',s=100,marker='*')
-        ax[0].scatter(self.RM.RTS.group_times,self.x_new/self.RM.gain,label='Convergence counts',s=25)
+        ax[0].scatter(self.RM.RTS.group_times,self.z_new/self.RM.gain,label='Convergence counts',s=25)
         ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-self.RM.RON_effective/self.RM.gain,label='Noiseless Counts + \n Bias + KTC + CRs',s=25)
         ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-(self.RM.RON_effective-np.mean(self.RM.RON_effective))/self.RM.gain,label='Noiseless Counts + \n Bias + KTC +\n mean RON',s=25)
         
-        ax[0].plot(self.RM.RTS.group_times,(self.x_new[0]+self.mean_electron_rate*(self.RM.RTS.group_times-self.RM.RTS.group_times[0]))/self.RM.gain)
+        ax[0].plot(self.RM.RTS.group_times,(self.z_new[0]+self.mean_electron_rate*(self.RM.RTS.group_times-self.RM.RTS.group_times[0]))/self.RM.gain)
 
         for j,gi in enumerate(self.good_intervals):
             if ~gi:
@@ -501,8 +551,9 @@ class IterativeFitter(object):
         y = self.RM.noisy_counts
         y = (y[1:]-y[:-1])/dt
         ax[1].scatter(mt,y,label='Noisy Counts',s=100,marker='*')
+        ax[1].axhline(np.mean(y[self.good_intervals]),linestyle='--')
         
-        y = self.x_new/self.RM.gain
+        y = self.z_new/self.RM.gain
         y = (y[1:]-y[:-1])/dt
         ax[1].scatter(mt,y,label='Convergence counts',s=25)
         
@@ -527,7 +578,20 @@ class IterativeFitter(object):
 
         ax[1].set_title('Differential counts')
 
+        sub1 = (self.z_new[0]+self.mean_electron_rate*(self.RM.RTS.group_times-self.RM.RTS.group_times[0]))/self.RM.gain
+        sub2 = (self.x_new[0]+self.mean_electron_rate*(self.RM.RTS.read_times[self.RM.RTS.kept_reads]-self.RM.RTS.read_times[self.RM.RTS.kept_reads][0]))/self.RM.gain
 
+        ax[2].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-sub1,label='Noisy Counts',s=100,marker='*')
+        ax[2].scatter(self.RM.RTS.group_times,self.z_new/self.RM.gain-sub1,label='Convergence counts',s=25)
+        
+        ax[2].scatter(self.RM.RTS.read_times[self.RM.RTS.kept_reads],self.RM.noisy_counts_reads[self.RM.RTS.kept_reads]-sub2,label='Noisy Counts - per frame',s=100,marker='*')
+        ax[2].scatter(self.RM.RTS.read_times[self.RM.RTS.kept_reads],self.x_new/self.RM.gain-sub2,label='Convergence counts  - per frame',s=25)
+        
+            
+        ax[2].legend()
+        ax[2].set_xlabel('Time [s]')
+        ax[2].set_ylabel('Counts')
+        ax[2].set_title('Counts minus solution')
 
         f.tight_layout()
 
