@@ -132,22 +132,23 @@ class RampTimeSeq(object):
         plt.rcParams['axes.labelweight'] = 'normal'
         plt.rcParams['xtick.labelsize'] = 15
         plt.rcParams['ytick.labelsize'] = 15
-        plt.rcParams['legend.fontsize'] = 10
+        plt.rcParams['legend.fontsize'] = 12
         plt.rcParams['figure.titlesize'] = 18
         plt.rcParams['axes.titlesize'] = 17
 
-        f,ax = plt.subplots(1,1,figsize=(10,4))
-        ax.scatter(self.read_times[self.kept_reads],np.ones_like(self.read_times[self.kept_reads]),c='b',s=4,label='Individual frames read times')
-        ax.scatter(self.read_times[~self.kept_reads],np.ones_like(self.read_times[~self.kept_reads]), c='r',s=4,label='Individual skipped frames times')
-        ax.scatter(self.group_times,1.1*np.ones_like(self.group_times),c='black',marker='x',s=30,label='Group average times')
+        f,ax = plt.subplots(1,1,figsize=(10,3))
+        ax.scatter(self.read_times[self.kept_reads],np.ones_like(self.read_times[self.kept_reads]),c='b',s=10,label='Individual averaged frames times')
+        ax.scatter(self.read_times[~self.kept_reads],np.ones_like(self.read_times[~self.kept_reads]), c='r',s=10,label='Individual skipped frames times')
+        ax.scatter(self.group_times,1.1*np.ones_like(self.group_times),c='black',marker='x',s=35,label='Groups average times')
         ax.set_xlabel('Time [s]')
-        ax.set_ylim(0.8,1.3)
+        ax.set_ylim(0.9,1.5)
+        ax.axes.yaxis.set_ticklabels([])
         ax.legend()
         ax.set_facecolor('#FFFFFF')
         
         f.tight_layout()
 
-
+        return f,ax
 
 
 class RampMeasurement(object):
@@ -394,62 +395,64 @@ class RampMeasurement(object):
 
         plt.style.use('bmh')
         plt.rcParams['font.family'] = 'Times New Roman'
-        plt.rcParams['font.size'] = 17
-        plt.rcParams['axes.labelsize'] = 17
+        plt.rcParams['font.size'] = 16
+        plt.rcParams['axes.labelsize'] = 16
         plt.rcParams['axes.labelweight'] = 'normal'
-        plt.rcParams['xtick.labelsize'] = 15
-        plt.rcParams['ytick.labelsize'] = 15
-        plt.rcParams['legend.fontsize'] = 10
-        plt.rcParams['figure.titlesize'] = 18
-        plt.rcParams['axes.titlesize'] = 17
+        plt.rcParams['xtick.labelsize'] = 14
+        plt.rcParams['ytick.labelsize'] = 14
+        plt.rcParams['legend.fontsize'] = 11
+        plt.rcParams['figure.titlesize'] = 17
+        plt.rcParams['axes.titlesize'] = 16
 
-        f,ax = plt.subplots(3,1,figsize=(8,12),sharex='col')
-        ax[0].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noiseless_counts_reads[self.RTS.kept_reads],label='Noiseless Counts',s=15)
-        ax[0].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noiseless_counts_reads[~self.RTS.kept_reads],label=None,s=3)
+        f,ax = plt.subplots(3,1,figsize=(5,10),sharex='col')
+        ax[0].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noiseless_counts_reads[self.RTS.kept_reads],label='Noiseless',s=20)
+        ax[0].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noiseless_counts_reads[~self.RTS.kept_reads],label=None,s=7)
                 
         if self.RTS.nframes > 1:
-            ax[0].scatter(self.RTS.group_times,self.noiseless_counts,label='Noiseless Counts -- gr. avg.',marker='x',s=100)
-        ax[0].legend()
+            ax[0].scatter(self.RTS.group_times,self.noiseless_counts,label='Noiseless -- gr. avg.',marker='x',s=100)
 
         ax[1].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noiseless_counts_reads[self.RTS.kept_reads]+self.cum_CR_counts_reads[self.RTS.kept_reads]+self.bias_adu+self.KTC_actual/self.gain,
-                      label='Noiseless Counts + \n Bias + KTC + CRs',s=15)
+                      label='Noiseless + Bias + KTC \n + CRs',s=20)
         ax[1].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noiseless_counts_reads[~self.RTS.kept_reads]+self.cum_CR_counts_reads[~self.RTS.kept_reads]+self.bias_adu+self.KTC_actual/self.gain,
-                      label=None,s=3)
+                      label=None,s=7)
         if self.RTS.nframes > 1:
             ax[1].scatter(self.RTS.group_times,self.noiseless_counts+self.cum_CR_counts+self.bias_adu+self.KTC_actual/self.gain,
-                          label='Noiseless Counts + \n Bias + KTC -- gr. avg.',s=100,marker='x')
+                          label='Noiseless + Bias + KTC \n -- gr. avg.',s=100,marker='x')
 
-        ax[1].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noisy_counts_reads[self.RTS.kept_reads],label='Noisy Counts',s=15)
-        ax[1].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noisy_counts_reads[~self.RTS.kept_reads],label=None,s=3)
+        ax[1].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noisy_counts_reads[self.RTS.kept_reads],label='Noisy' ,s=20)
+        ax[1].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noisy_counts_reads[~self.RTS.kept_reads],label=None,s=7)
         if self.RTS.nframes > 1:
-            ax[1].scatter(self.RTS.group_times,self.noisy_counts,label='Noisy Counts -- gr. avg.',s=100,marker='x')
-        ax[1].legend()
+            ax[1].scatter(self.RTS.group_times,self.noisy_counts,label='Noisy -- gr. avg.',s=100,marker='x')
 
-        ydw,yup = ax[1].get_ylim()
 
         if self.CRdict is not None:
+            ydw,yup = ax[1].get_ylim()
             cmax = 0.
             for t,c in zip(self.CRdict['times'],self.CRdict['counts']):
                 ax[1].plot([t,t],[ydw,ydw-c],label=None,c='#555555')
                 if c > cmax:
                     cmax = c
+            ax[1].set_ylim(ydw-1.1*cmax,yup+0.7*cmax)
                 
-            ax[1].set_ylim(ydw-1.1*cmax,yup)
-                
-        ax[2].scatter(self.RTS.read_times[self.RTS.kept_reads],self.RON_actual_reads[self.RTS.kept_reads]/self.gain,label='RON (counts)',s=15)
-        ax[2].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.RON_actual_reads[~self.RTS.kept_reads]/self.gain,label=None,s=3)
+        ax[2].scatter(self.RTS.read_times[self.RTS.kept_reads],self.RON_actual_reads[self.RTS.kept_reads]/self.gain,label='RON/gain',s=20)
+        ax[2].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.RON_actual_reads[~self.RTS.kept_reads]/self.gain,label=None,s=7)
         if self.RTS.nframes > 1:
-            ax[2].scatter(self.RTS.group_times,self.RON_effective/self.gain,label='RON (counts) -- gr.avg.',s=100,marker='x')
+            ax[2].scatter(self.RTS.group_times,self.RON_effective/self.gain,label='RON/gain -- gr.avg.',s=100,marker='x')
         ax[2].set_xlabel('Time [s]')
         ax[2].set_ylim(-3*self.RON_adu,3*self.RON_adu)
-        ax[2].legend()
 
-        for axx in ax:
+        for axx,fac in zip(ax,[0.25,0.4,0.2]):
             axx.set_facecolor('#FFFFFF')
+            axx.set_ylabel('Counts')
+            ydw,yup = axx.get_ylim()
+            
+            axx.set_ylim(ydw,yup+fac*(yup-ydw))
+            axx.legend(loc=2,ncol=2,labelspacing =0.3,handletextpad=1,columnspacing=1.)
 
         f.tight_layout()
 
-
+        return f,ax
+        
     def add_background(self,extra_bg):
 
         '''
