@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import poisson, norm, uniform, gamma, power_divergence, chi2
 from scipy.optimize import minimize
 from scipy.optimize.optimize import _minimize_neldermead
+from scipy.interpolate import interp1d
 import sys
 
 class IterativeFitter(object):
@@ -536,25 +537,35 @@ class IterativeFitter(object):
         plt.rcParams['axes.labelweight'] = 'normal'
         plt.rcParams['xtick.labelsize'] = 15
         plt.rcParams['ytick.labelsize'] = 15
-        plt.rcParams['legend.fontsize'] = 10
+        plt.rcParams['legend.fontsize'] = 11
         plt.rcParams['figure.titlesize'] = 18
         plt.rcParams['axes.titlesize'] = 17
         
         
         f,ax = plt.subplots(1,3,figsize=(15,4),sharex='row')
-        ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts,label='Noisy Counts',s=100,marker='*')
-        ax[0].scatter(self.RM.RTS.group_times,self.z_new/self.RM.gain,label='Convergence counts',s=25)
-        ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-self.RM.RON_effective/self.RM.gain,label='Noiseless Counts + \n Bias + KTC + CRs',s=25)
-        #ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-(self.RM.RON_effective-np.mean(self.RM.RON_effective))/self.RM.gain,label='Noiseless Counts + \n Bias + KTC +\n mean RON',s=25)
-        
-        ax[0].plot(self.RM.RTS.group_times,(self.z_new[0]+self.mean_electron_rate*(self.RM.RTS.group_times-self.RM.RTS.group_times[0]))/self.RM.gain)
+        ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts,label='Noisy counts',s=200,marker='*')
+        ax[0].scatter(self.RM.RTS.group_times,self.z_new/self.RM.gain,label='Convergence counts',s=50)
+        ax[0].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-self.RM.RON_effective/self.RM.gain,label='Noiseless counts + \n Bias + KTC + CRs',s=50)
+
+        tcr = []
+        ccr = []
+        solution = (self.z_new[0]+self.mean_electron_rate*(self.RM.RTS.group_times-self.RM.RTS.group_times[0]))/self.RM.gain
 
         for j,gi in enumerate(self.good_intervals):
             if ~gi:
+                tcr.append(self.RM.RTS.group_times[j+1])
+                ccr.append((self.z_new[j+1]-self.z_new[j])/self.RM.gain-self.mean_electron_rate*(self.RM.RTS.group_times[j+1]-self.RM.RTS.group_times[j]))
+                solution[j+1:] = solution[j+1:]+ ccr[-1]
                 if j == 0:
                     ax[0].axvline(0.5*(self.RM.RTS.group_times[j]+self.RM.RTS.group_times[j+1]),color='#bbbbbb',linestyle='--',label='CR hits')
                 else:
                     ax[0].axvline(0.5*(self.RM.RTS.group_times[j]+self.RM.RTS.group_times[j+1]),color='#bbbbbb',linestyle='--')
+
+
+        ax[0].plot(self.RM.RTS.group_times,solution)
+
+
+
             
         ax[0].set_xlabel('Time [s]')
         ax[0].set_ylabel('Counts')
@@ -568,17 +579,17 @@ class IterativeFitter(object):
         
         w = 1./np.square(self.stddev/self.RM.gain/dt)
         
-        ax[1].scatter(mt,y,label='Noisy Counts',s=100,marker='*')
-        ax[1].axhline(np.average(y[self.good_intervals],weights=w[self.good_intervals]),linestyle='--',label='Observed count rate')
-        ax[1].axhline(self.RM.flux/self.RM.gain,linestyle=':',label='True count rate')
+        ax[1].scatter(mt,y,label='Noisy counts',s=200,marker='*')
+#        ax[1].axhline(np.average(y[self.good_intervals],weights=w[self.good_intervals]),linestyle='--',label='Observed count rate')
+        ax[1].axhline(self.RM.flux/self.RM.gain,linestyle=':',label='Truth',color='orange')
         
         y = self.z_new/self.RM.gain
         y = (y[1:]-y[:-1])/dt
-        ax[1].scatter(mt,y,label='Convergence counts',s=25)
+        ax[1].scatter(mt,y,label='Convergence counts',s=50)
         
         y = self.RM.noisy_counts-self.RM.RON_effective/self.RM.gain
         y = (y[1:]-y[:-1])/dt
-        ax[1].scatter(mt,y,label='Noiseless Counts + \n Bias + KTC + CRs',s=25)
+        ax[1].scatter(mt,y,label='Noiseless counts + \n Bias + KTC + CRs',s=50)
         
         y = self.RM.noisy_counts-(self.RM.RON_effective-np.mean(self.RM.RON_effective))/self.RM.gain
         y = (y[1:]-y[:-1])/dt        
@@ -599,14 +610,17 @@ class IterativeFitter(object):
 
         ax[1].set_title('Differential counts')
 
-        sub1 = (self.z_new[0]+self.mean_electron_rate*(self.RM.RTS.group_times-self.RM.RTS.group_times[0]))/self.RM.gain
-        sub2 = (self.x_new[0]+self.mean_electron_rate*(self.RM.RTS.read_times[self.RM.RTS.kept_reads]-self.RM.RTS.read_times[self.RM.RTS.kept_reads][0]))/self.RM.gain
+#        sub1 = (self.z_new[0]+self.mean_electron_rate*(self.RM.RTS.group_times-self.RM.RTS.group_times[0]))/self.RM.gain
+#        sub2 = (self.x_new[0]+self.mean_electron_rate*(self.RM.RTS.read_times[self.RM.RTS.kept_reads]-self.RM.RTS.read_times[self.RM.RTS.kept_reads][0]))/self.RM.gain
 
-        ax[2].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-sub1,label='Noisy Counts',s=100,marker='*')
-        ax[2].scatter(self.RM.RTS.group_times,self.z_new/self.RM.gain-sub1,label='Convergence counts',s=25)
+        intp = interp1d(self.RM.RTS.group_times,solution,bounds_error=False, fill_value='extrapolate')
+        intp_sol = intp(self.RM.RTS.read_times[self.RM.RTS.kept_reads])
+
+        ax[2].scatter(self.RM.RTS.group_times,self.RM.noisy_counts-solution,label='Noisy Counts',s=200,marker='*')
+        ax[2].scatter(self.RM.RTS.group_times,self.z_new/self.RM.gain-solution,label='Convergence Counts',s=50)
         
-        ax[2].scatter(self.RM.RTS.read_times[self.RM.RTS.kept_reads],self.RM.noisy_counts_reads[self.RM.RTS.kept_reads]-sub2,label='Noisy Counts - per frame',s=100,marker='*')
-        ax[2].scatter(self.RM.RTS.read_times[self.RM.RTS.kept_reads],self.x_new/self.RM.gain-sub2,label='Convergence counts  - per frame',s=25)
+        ax[2].scatter(self.RM.RTS.read_times[self.RM.RTS.kept_reads],self.RM.noisy_counts_reads[self.RM.RTS.kept_reads]-intp_sol,label='Noisy counts - per frame',s=200,marker='*')
+        ax[2].scatter(self.RM.RTS.read_times[self.RM.RTS.kept_reads],self.x_new/self.RM.gain-intp_sol,label='Convergence counts  - per frame',s=50)
         
             
         ax[2].set_xlabel('Time [s]')
@@ -616,8 +630,9 @@ class IterativeFitter(object):
         for axx,nc in zip(ax,[1,2,1]):
             axx.legend(ncol=nc)
             axx.set_facecolor('#FFFFFF')
-
+            ydw,yup = axx.get_ylim()
+            axx.set_ylim(ydw,yup+0.75*(yup-ydw))
 
         f.tight_layout()
 
-
+        return f,ax

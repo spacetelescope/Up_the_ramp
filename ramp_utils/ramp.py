@@ -388,9 +388,12 @@ class RampMeasurement(object):
             self.RON_effective[i] = np.mean(stuff_to_average)
         
             
-    def test_plot(self):
+    def test_plot(self,plot_rate=False):
         '''
         Method to plot the simulated counts
+        
+        :plot_rate: 
+            optional (default == False), allows to plot 2 further panels with count rate values in addition to the default 3 showing only cumulative counts
         '''
 
         plt.style.use('bmh')
@@ -404,44 +407,110 @@ class RampMeasurement(object):
         plt.rcParams['figure.titlesize'] = 17
         plt.rcParams['axes.titlesize'] = 16
 
-        f,ax = plt.subplots(3,1,figsize=(5,10),sharex='col')
-        ax[0].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noiseless_counts_reads[self.RTS.kept_reads],label='Noiseless',s=20)
-        ax[0].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noiseless_counts_reads[~self.RTS.kept_reads],label=None,s=7)
+        if plot_rate == False:
+            f,ax = plt.subplots(3,1,figsize=(5,10),sharex='col')
+        else:
+            f,ax = plt.subplots(3,2,figsize=(8,10),sharex='col')
+        
+        if plot_rate == False:
+            myax0 = ax[0]
+            myax1 = ax[1]
+            myax2 = ax[2]
+            
+        else:
+            myax0 = ax[0,0]  
+            myax1 = ax[1,0]  
+            myax2 = ax[2,0]  
+                  
+        myax0.scatter(self.RTS.read_times[self.RTS.kept_reads],self.noiseless_counts_reads[self.RTS.kept_reads],label='Noiseless',s=40)
+        myax0.scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noiseless_counts_reads[~self.RTS.kept_reads],label=None,s=14)
                 
         if self.RTS.nframes > 1:
-            ax[0].scatter(self.RTS.group_times,self.noiseless_counts,label='Noiseless -- gr. avg.',marker='x',s=100)
+            myax0.scatter(self.RTS.group_times,self.noiseless_counts,label='Noiseless -- gr. avg.',marker='x',s=200)
 
-        ax[1].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noiseless_counts_reads[self.RTS.kept_reads]+self.cum_CR_counts_reads[self.RTS.kept_reads]+self.bias_adu+self.KTC_actual/self.gain,
+##############################
+
+        if plot_rate == True:
+            ax[0,1].scatter(0.5*(self.RTS.read_times[self.RTS.kept_reads][1:]+self.RTS.read_times[self.RTS.kept_reads][:-1]),
+                            (self.noiseless_counts_reads[self.RTS.kept_reads][1:]-self.noiseless_counts_reads[self.RTS.kept_reads][:-1])/(
+                            self.RTS.read_times[self.RTS.kept_reads][1:]-self.RTS.read_times[self.RTS.kept_reads][:-1])
+                            ,label='Noiseless',s=40)
+                            
+            ax[0,1].scatter(0.5*(self.RTS.read_times[~self.RTS.kept_reads][1:]+self.RTS.read_times[~self.RTS.kept_reads][:-1]),
+                            (self.noiseless_counts_reads[~self.RTS.kept_reads][1:]-self.noiseless_counts_reads[~self.RTS.kept_reads][:-1])/(
+                            self.RTS.read_times[~self.RTS.kept_reads][1:]-self.RTS.read_times[~self.RTS.kept_reads][:-1])
+                            ,label=None,s=14)
+                    
+            if self.RTS.nframes > 1:
+                ax[0,1].scatter(0.5*(self.RTS.group_times[1:]+self.RTS.group_times[:-1]),
+                                (self.noiseless_counts[1:]-self.noiseless_counts[:-1]),
+                                label='Noiseless -- gr. avg.',marker='x',s=200)
+
+            ax[0,1].axhline(self.flux/self.gain,color='orange',label='Truth')
+
+##############################
+
+        myax1.scatter(self.RTS.read_times[self.RTS.kept_reads],self.noiseless_counts_reads[self.RTS.kept_reads]+self.cum_CR_counts_reads[self.RTS.kept_reads]+self.bias_adu+self.KTC_actual/self.gain,
                       label='Noiseless + Bias + KTC \n + CRs',s=20)
-        ax[1].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noiseless_counts_reads[~self.RTS.kept_reads]+self.cum_CR_counts_reads[~self.RTS.kept_reads]+self.bias_adu+self.KTC_actual/self.gain,
+        myax1.scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noiseless_counts_reads[~self.RTS.kept_reads]+self.cum_CR_counts_reads[~self.RTS.kept_reads]+self.bias_adu+self.KTC_actual/self.gain,
                       label=None,s=7)
         if self.RTS.nframes > 1:
-            ax[1].scatter(self.RTS.group_times,self.noiseless_counts+self.cum_CR_counts+self.bias_adu+self.KTC_actual/self.gain,
+            myax1.scatter(self.RTS.group_times,self.noiseless_counts+self.cum_CR_counts+self.bias_adu+self.KTC_actual/self.gain,
                           label='Noiseless + Bias + KTC \n -- gr. avg.',s=100,marker='x')
 
-        ax[1].scatter(self.RTS.read_times[self.RTS.kept_reads],self.noisy_counts_reads[self.RTS.kept_reads],label='Noisy' ,s=20)
-        ax[1].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noisy_counts_reads[~self.RTS.kept_reads],label=None,s=7)
+        myax1.scatter(self.RTS.read_times[self.RTS.kept_reads],self.noisy_counts_reads[self.RTS.kept_reads],label='Noisy' ,s=40)
+        myax1.scatter(self.RTS.read_times[~self.RTS.kept_reads],self.noisy_counts_reads[~self.RTS.kept_reads],label=None,s=14)
         if self.RTS.nframes > 1:
-            ax[1].scatter(self.RTS.group_times,self.noisy_counts,label='Noisy -- gr. avg.',s=100,marker='x')
+            myax1.scatter(self.RTS.group_times,self.noisy_counts,label='Noisy -- gr. avg.',s=200,marker='x')
 
 
         if self.CRdict is not None:
-            ydw,yup = ax[1].get_ylim()
+            ydw,yup = myax1.get_ylim()
             cmax = 0.
+            if plot_rate == True: 
+                vd = 0.2*(ax[0,1].get_ylim()[1]-ax[0,1].get_ylim()[0])
             for t,c in zip(self.CRdict['times'],self.CRdict['counts']):
-                ax[1].plot([t,t],[ydw,ydw-c],label=None,c='#555555')
+                myax1.plot([t,t],[ydw,ydw-c],label=None,c='#555555')
+                
+                if plot_rate == True: 
+                    ax[0,1].plot([t,t],[self.flux/self.gain-vd,self.flux/self.gain-1.5*vd],label=None,c='#555555')
+                
                 if c > cmax:
                     cmax = c
-            ax[1].set_ylim(ydw-1.1*cmax,yup+0.7*cmax)
-                
-        ax[2].scatter(self.RTS.read_times[self.RTS.kept_reads],self.RON_actual_reads[self.RTS.kept_reads]/self.gain,label='RON/gain',s=20)
-        ax[2].scatter(self.RTS.read_times[~self.RTS.kept_reads],self.RON_actual_reads[~self.RTS.kept_reads]/self.gain,label=None,s=7)
-        if self.RTS.nframes > 1:
-            ax[2].scatter(self.RTS.group_times,self.RON_effective/self.gain,label='RON/gain -- gr.avg.',s=100,marker='x')
-        ax[2].set_xlabel('Time [s]')
-        ax[2].set_ylim(-3*self.RON_adu,3*self.RON_adu)
+            myax1.set_ylim(ydw-1.1*cmax,yup+0.7*cmax)
 
-        for axx,fac in zip(ax,[0.25,0.4,0.2]):
+##############################
+
+        if plot_rate == True:
+            ax[1,1].scatter(0.5*(self.RTS.read_times[self.RTS.kept_reads][1:]+self.RTS.read_times[self.RTS.kept_reads][:-1]),
+                            (self.noisy_counts_reads[self.RTS.kept_reads][1:]-self.noisy_counts_reads[self.RTS.kept_reads][:-1])/(
+                            self.RTS.read_times[self.RTS.kept_reads][1:]-self.RTS.read_times[self.RTS.kept_reads][:-1])
+                            ,label='Noisy',s=40)
+                            
+            ax[1,1].scatter(0.5*(self.RTS.read_times[~self.RTS.kept_reads][1:]+self.RTS.read_times[~self.RTS.kept_reads][:-1]),
+                            (self.noisy_counts_reads[~self.RTS.kept_reads][1:]-self.noisy_counts_reads[~self.RTS.kept_reads][:-1])/(
+                            self.RTS.read_times[~self.RTS.kept_reads][1:]-self.RTS.read_times[~self.RTS.kept_reads][:-1])
+                            ,label=None,s=14)
+                    
+            if self.RTS.nframes > 1:
+                ax[1,1].scatter(0.5*(self.RTS.group_times[1:]+self.RTS.group_times[:-1]),
+                                (self.noisy_counts[1:]-self.noisy_counts[:-1]),
+                                label='Noisy -- gr. avg.',marker='x',s=200)
+    
+            ax[1,1].axhline(self.flux/self.gain,color='orange',label='Truth')
+
+
+##############################
+
+                
+        myax2.scatter(self.RTS.read_times[self.RTS.kept_reads],self.RON_actual_reads[self.RTS.kept_reads]/self.gain,label='RON/gain',s=40)
+        myax2.scatter(self.RTS.read_times[~self.RTS.kept_reads],self.RON_actual_reads[~self.RTS.kept_reads]/self.gain,label=None,s=14)
+        if self.RTS.nframes > 1:
+            myax2.scatter(self.RTS.group_times,self.RON_effective/self.gain,label='RON/gain -- gr.avg.',s=200,marker='x')
+        myax2.set_xlabel('Time [s]')
+        myax2.set_ylim(-3*self.RON_adu,3*self.RON_adu)
+
+        for axx,fac in zip([myax0,myax1,myax2],[0.25,0.4,0.2]):
             axx.set_facecolor('#FFFFFF')
             axx.set_ylabel('Counts')
             ydw,yup = axx.get_ylim()
@@ -449,8 +518,17 @@ class RampMeasurement(object):
             axx.set_ylim(ydw,yup+fac*(yup-ydw))
             axx.legend(loc=2,ncol=2,labelspacing =0.3,handletextpad=1,columnspacing=1.)
 
-        f.tight_layout()
+        if plot_rate == True:
+            for axx,fac in zip(ax[:,1],[0.25,0.4,0.2]):
+                axx.set_facecolor('#FFFFFF')
+                axx.set_ylabel('Count rate')
+                ydw,yup = axx.get_ylim()
+                axx.set_ylim(ydw,yup+fac*(yup-ydw))
+                axx.legend(loc=2,ncol=2,labelspacing =0.3,handletextpad=1,columnspacing=1.)
+            ax[2,1].remove()
 
+
+        f.tight_layout()
         return f,ax
         
     def add_background(self,extra_bg):
