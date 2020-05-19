@@ -17,21 +17,21 @@ from scipy.interpolate import interp1d
 
 # ### Set the working directory for saving the results
 
-# In[ ]:
+# In[ ]
 
 
 dirsave = '/user/gennaro/Functional_work/Up_the_ramp_myfork/Simulations_results/'
-testname = 'BKG_1p0_pow3p0'
+testname = 'BKG_HeI_constant'
 
 #Set the measurement properties here
 
 myramps   = [RampTimeSeq('HST/WFC3/IR',15,samp_seq='SPARS100')]
-myfluxes  = [0.5]
+myfluxes  = [1.5]
 myCRrates = [0.]
 
 
-tbg  = np.linspace(0,1500,10)
-cbg  = np.array([1.0,1.2,1.5,1.3,1.7,2.0,2.2,2.4,2.0,1.5])
+tbg  = np.linspace(0,1500,11)
+cbg  = np.array([0.5, 0.6, 0.7, 1., 1.6, 2.2, 2.1, 1.7, 1.6, 1.5, 1.8])
 
 #mybgs      = [   None,   None,   None,   None, 
 #               {'times':tbg,'vbg_er':cbg,'mean_bg_er':1.},
@@ -39,7 +39,7 @@ cbg  = np.array([1.0,1.2,1.5,1.3,1.7,2.0,2.2,2.4,2.0,1.5])
 #               {'times':tbg,'vbg_er':cbg,'mean_bg_er':2.},]
 
 
-mybgs     = [{'times':tbg,'vbg_er':np.power(cbg,3.0),'mean_bg_er':1.0}]
+mybgs     = [None] #[{'times':tbg,'vbg_er':np.power(cbg,1.0),'mean_bg_er':1.5}]
 mymdict   = None
 
 ntest     = 10000

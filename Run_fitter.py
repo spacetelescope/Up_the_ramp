@@ -21,25 +21,25 @@ from scipy.interpolate import interp1d
 
 
 dirsave = '/user/gennaro/Functional_work/Up_the_ramp_myfork/Simulations_results/'
-testname = 'STEP200_NSAMP13_SNR10_round'
+testname = 'STEP200_NSAMP13_SNR50_CR6'
 
 outputs_file = dirsave+'Test_'+testname+'_out.pbz2'
 inputs_file  = dirsave+'Test_'+testname+'_in.pbz2'
 
-
+sys.stdout = open('log_'+testname+'.txt','w')
 
 # ### Setup the fitter method and options
 
 fitpars = {'one_iteration_method':'Nelder-Mead'}
-
+CRT = 6.
 
 # ### Setup the job
 
 # In[ ]:
 
-printevery = 200
-n_jobs     = 15
-chunksize  = 10 
+printevery = 100
+n_jobs     = 8
+chunksize  = 15 
 
 
 # ### Run the fitter on multiple ramps
@@ -53,7 +53,7 @@ def one_fit(l,meas):
         sys.stdout.flush()
 
     fitter = IterativeFitter(meas,fitpars = fitpars)
-    error,counter, goodints, crloops_counter  = fitter.perform_fit()
+    error,counter, goodints, crloops_counter  = fitter.perform_fit(CRthr=CRT)
     outerate = fitter.mean_electron_rate
     fitter.goodness_of_fit(mode='full-likelihood')
     gof_stat = fitter.gof_stat

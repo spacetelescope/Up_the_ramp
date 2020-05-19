@@ -1,0 +1,120 @@
+Traceback (most recent call last):
+  File "Run_fitter.py", line 87, in <module>
+    assert False
+AssertionError
+Traceback (most recent call last):
+  File "Run_fitter.py", line 87, in <module>
+    assert False
+AssertionError
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:125: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:125: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:125: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps])
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:125: RuntimeWarning: divide by zero encountered in log
+  return -1.* ( np.sum(np.log(gaussian_pdf)[keep_grps])
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/scipy/optimize/optimize.py:563: RuntimeWarning: invalid value encountered in subtract
+  numpy.max(numpy.abs(fsim[0] - fsim[1:])) <= fatol):
+/home/gennaro/anaconda3/envs/astroconda/lib/python3.5/site-packages/numpy/core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/user/gennaro/Functional_work/Up_the_ramp_myfork/ramp_utils/fitter.py:126: RuntimeWarning: divide by zero encountered in log
+  + np.sum(np.log(poisson_pmf[1:])[self.good_intervals])
