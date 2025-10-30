@@ -1,8 +1,8 @@
 # Iterative maximum likelihood fit of infrared detectors ramps
 
-This package contains the code described in Gennaro and Khandrika (2020) - **ref goes here** to perform the fit of infrared detector ramps.
-The code can be applied to ramps with arbitrary number of groups, averaged frames per group and skipped frames.
-
+This package contains the code described in Gennaro and Khandrika (2021), see https://ui.adsabs.harvard.edu/abs/2021wfc..rept...11G/abstract
+The code is used to perform the up the ramp fit of infrared detector ramps.
+It can be applied to ramps with arbitrary number of groups, averaged frames per group and skipped frames.
 
 ## Content
 
